@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "itchio"
-version = "1.0.1"
+version = "1.0.2"
 description = "Python Scripts for downloading / archiving your itchio library"
 authors = ["Peter Taylor <me@et1.uk>"]
 license = "MIT"
