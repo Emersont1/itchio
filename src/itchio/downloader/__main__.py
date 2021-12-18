@@ -17,7 +17,7 @@ l = ""
 if not args.api_key:
     user = input("Username: ")
     password = getpass("Password: ")
-    l = itchio.LoginWeb(user, password)
+    l = itchio.LoginAPI(user, password)
 else:
     l = args.api_key
 
