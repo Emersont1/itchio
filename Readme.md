@@ -1,5 +1,8 @@
 # Itchio Downloader Tool
-
+## Install
+```bash
+pip install git+https://github.com/emersont1/itchio 
+```
 ## Download All Games in library from account
 
 ```bash
