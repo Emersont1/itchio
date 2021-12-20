@@ -31,6 +31,7 @@ class Game:
     def download(self, token):
         if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
             print(f"Skipping Game {self.name}")
+            continue
 
         self.load_downloads(token)
 
