@@ -29,6 +29,9 @@ class Game:
             self.downloads.append(d)
     
     def download(self, token):
+        if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
+            print(f"Skipping Game {self.name}")
+
         self.load_downloads(token)
 
         if not os.path.exists(self.publisher_slug):
@@ -36,16 +39,6 @@ class Game:
 
         if not os.path.exists(f"{self.publisher_slug}/{self.game_slug}"):
             os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
-
-        with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
-            json.dump({
-                "name": self.name,
-                "publisher": self.publisher,
-                "link": self.link,
-                "itch_id": self.id,
-                "game_id": self.game_id,
-                "itch_data": self.data,
-            }, f)
 
         for d in self.downloads:
             file = d['filename'] or d['display_name'] or d['id']
@@ -62,3 +55,13 @@ class Game:
 
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
             itchio.utils.download_url(url, outfile, self.name +" - "+file)
+
+        with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
+            json.dump({
+                "name": self.name,
+                "publisher": self.publisher,
+                "link": self.link,
+                "itch_id": self.id,
+                "game_id": self.game_id,
+                "itch_data": self.data,
+            }, f)
