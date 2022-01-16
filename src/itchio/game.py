@@ -56,21 +56,24 @@ class Game:
 
             # Download
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
-            response_code = urllib.request.urlopen(url).getcode()
-            if response_code != 200:
+            # response_code = urllib.request.urlopen(url).getcode()
+            try:
+                itchio.utils.download_url(url, outfile, self.name +" - "+file)
+            except urllib.error.HTTPError as e:
                 print("This one has broken!!")
                 file_object = open('errors.txt', 'a')
-                """ Cannot download game/asset: {self.game_slug}"
-                Publisher Name: {self.publisher_slug}"
-                Output File: {outfile}"
-                Request URL: {url}"
-                Request Response Code: {response_code}"
-                This game/asset has been skipped please download manually"
+                f""" Cannot download game/asset: {self.game_slug}
+                Publisher Name: {self.publisher_slug}
+                Output File: {outfile}
+                Request URL: {url}
+                Request Response Code: {e.code}
+                Error Reason: {e.reason}
+                This game/asset has been skipped please download manually
                 --------------------------------\n """
                 file_object.close()
                 continue
 
-            itchio.utils.download_url(url, outfile, self.name +" - "+file)
+
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump({
