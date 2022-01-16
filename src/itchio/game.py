@@ -3,7 +3,8 @@ import requests
 import json
 import os
 import urllib
-import sys
+
+
 
 import itchio.utils
 
@@ -61,15 +62,16 @@ class Game:
                 itchio.utils.download_url(url, outfile, self.name +" - "+file)
             except urllib.error.HTTPError as e:
                 print("This one has broken!!")
+
                 file_object = open('errors.txt', 'a')
-                f""" Cannot download game/asset: {self.game_slug}
+                file_object.write(f""" Cannot download game/asset: {self.game_slug}
                 Publisher Name: {self.publisher_slug}
                 Output File: {outfile}
                 Request URL: {url}
                 Request Response Code: {e.code}
                 Error Reason: {e.reason}
                 This game/asset has been skipped please download manually
-                --------------------------------\n """
+                --------------------------------\n """)
                 file_object.close()
                 continue
 
