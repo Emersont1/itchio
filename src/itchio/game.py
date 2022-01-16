@@ -55,6 +55,7 @@ class Game:
             # Download
 
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
+            print(url)
             itchio.utils.download_url(url, outfile, self.name +" - "+file)
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
