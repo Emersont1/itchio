@@ -3,6 +3,7 @@ import requests
 import json
 import os
 import urllib
+import sys
 
 import itchio.utils
 
@@ -51,15 +52,25 @@ class Game:
 
             # Get UUID
             r = requests.post(f"https://api.itch.io/games/{self.game_id}/download-sessions", headers={"Authorization": token})
-            j = r.json(self.game_slug)
+            j = r.json()
 
             # Download
-            print(self.game_slug)
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
-            print(url)
-            print(urllib.request.urlopen(url).getcode())
-            print("--------------------------------")
-            # itchio.utils.download_url(url, outfile, self.name +" - "+file)
+            response_code = urllib.request.urlopen(url).getcode()
+            if response_code != 200:
+                print("This one has broken!!")
+                file_object = open('errors.txt', 'a')
+                """ Cannot download game/asset: {self.game_slug}"
+                Publisher Name: {self.publisher_slug}"
+                Output File: {outfile}"
+                Request URL: {url}"
+                Request Response Code: {response_code}"
+                This game/asset has been skipped please download manually"
+                --------------------------------\n """
+                file_object.close()
+                continue
+
+            itchio.utils.download_url(url, outfile, self.name +" - "+file)
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump({
