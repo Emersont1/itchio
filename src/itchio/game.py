@@ -71,7 +71,7 @@ class Game:
                 Request Response Code: {e.code}
                 Error Reason: {e.reason}
                 This game/asset has been skipped please download manually
-                --------------------------------\n """)
+                ---------------------------------------------------------\n """)
                 file_object.close()
                 continue
 
