@@ -63,16 +63,16 @@ class Game:
             except urllib.error.HTTPError as e:
                 print("This one has broken!!")
 
-                file_object = open('errors.txt', 'a')
-                file_object.write(f""" Cannot download game/asset: {self.game_slug}
-                Publisher Name: {self.publisher_slug}
-                Output File: {outfile}
-                Request URL: {url}
-                Request Response Code: {e.code}
-                Error Reason: {e.reason}
-                This game/asset has been skipped please download manually
-                ---------------------------------------------------------\n """)
-                file_object.close()
+                with open('errors.txt', 'a') as f:
+                    f.write(f""" Cannot download game/asset: {self.game_slug}
+                    Publisher Name: {self.publisher_slug}
+                    Output File: {outfile}
+                    Request URL: {url}
+                    Request Response Code: {e.code}
+                    Error Reason: {e.reason}
+                    This game/asset has been skipped please download manually
+                    ---------------------------------------------------------\n """)
+                
                 continue
 
 
