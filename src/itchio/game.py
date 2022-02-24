@@ -2,6 +2,9 @@ import re
 import requests
 import json
 import os
+import urllib
+
+
 
 import itchio.utils
 
@@ -53,9 +56,26 @@ class Game:
             j = r.json()
 
             # Download
-
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
-            itchio.utils.download_url(url, outfile, self.name +" - "+file)
+            # response_code = urllib.request.urlopen(url).getcode()
+            try:
+                itchio.utils.download_url(url, outfile, self.name +" - "+file)
+            except urllib.error.HTTPError as e:
+                print("This one has broken!!")
+
+                with open('errors.txt', 'a') as f:
+                    f.write(f""" Cannot download game/asset: {self.game_slug}
+                    Publisher Name: {self.publisher_slug}
+                    Output File: {outfile}
+                    Request URL: {url}
+                    Request Response Code: {e.code}
+                    Error Reason: {e.reason}
+                    This game/asset has been skipped please download manually
+                    ---------------------------------------------------------\n """)
+                
+                continue
+
+
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump({
