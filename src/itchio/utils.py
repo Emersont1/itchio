@@ -1,16 +1,26 @@
-import urllib.request
+import requests
+import re
+import os
 
-from tqdm import tqdm
+from clint.textui import progress
 
+def download(url, path, desc):
+    print(f"Downloading {desc}")
+    rsp = requests.get(url, stream=True)
+    cd = rsp.headers.get("Content-Disposition")
+    filename = re.search(r'filename="(.+)"', cd).group(1)
+    total_length = int(rsp.headers.get('content-length'))
 
-class DownloadProgressBar(tqdm):
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
+    if os.path.exists(f"{path}/{filename}"):
+        if os.path.getsize(f"{path}/{filename}") == total_length:
+            print(f"{filename} already exists, skipping")
+            return f"{path}/{filename}", False
+        else:
+            print(f"{filename} exists but is incomplete, downloading again")
 
-
-def download_url(url, output_path, desc):
-    with DownloadProgressBar(unit='B', unit_scale=True,
-                             miniters=1, desc=desc) as t:
-        urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
+    with open(f"{path}/{filename}", "wb") as f:
+        for chunk in progress.bar(rsp.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
+            if chunk:
+                f.write(chunk)
+                f.flush()
+    return f"{path}/{filename}", True
