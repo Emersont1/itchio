@@ -46,9 +46,9 @@ class Game:
 
         for d in self.downloads:
             file = d['filename'] or d['display_name'] or d['id']
-            outfile = f"{self.publisher_slug}/{self.game_slug}/{file}"
-            if os.path.exists(outfile):
-                print(f"Skipping {outfile}")
+            path = f"{self.publisher_slug}/{self.game_slug}"
+            if os.path.exists(f"{path}/{file}"):
+                print(f"Skipping {path}/{file}")
                 continue
 
             # Get UUID
@@ -59,14 +59,15 @@ class Game:
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
             # response_code = urllib.request.urlopen(url).getcode()
             try:
-                itchio.utils.download_url(url, outfile, self.name +" - "+file)
+                itchio.utils.download(url, path, self.name +" - "+file)
             except urllib.error.HTTPError as e:
                 print("This one has broken!!")
 
                 with open('errors.txt', 'a') as f:
                     f.write(f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Output File: {outfile}
+                    Path: {path}
+                    File: {file}
                     Request URL: {url}
                     Request Response Code: {e.code}
                     Error Reason: {e.reason}
