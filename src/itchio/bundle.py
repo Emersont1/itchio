@@ -11,7 +11,7 @@ class Bundle:
         
         r = self.login.get(self.url)
         s = soup(r.text, "html.parser")
-        pages = int(s.find("span", {"class": "pager_label"}).find_all("a")[-1].text)
+        pages = int(s.select("span.pager_label a")[-1].text)
         while i < pages:
             if self.load_game(i):
                 i += 1
@@ -21,8 +21,8 @@ class Bundle:
         # Load 1 game. This will refresh the game afterwards, as the csrf token will update
         r = self.login.get(f"{self.url}?page={i}")
         s = soup(r.text, "html.parser")
-        for g in s.find_all("div", {"class": "game_row"}):
-            name = g.find("h2").find("a").text
+        for g in s.select("div.game_row"):
+            name = g.select("h2 a")[0].text
             if f := g.find("form"):
                 print(f"Processing {name}")
 
