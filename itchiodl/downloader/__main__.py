@@ -1,7 +1,7 @@
 import argparse
 from getpass import getpass
 
-import itchio
+import itchiodl
 
 parser = argparse.ArgumentParser(
     prog='python -m hstp',
@@ -17,10 +17,10 @@ l = ""
 if not args.api_key:
     user = input("Username: ")
     password = getpass("Password: ")
-    l = itchio.LoginAPI(user, password)
+    l = itchiodl.LoginAPI(user, password)
 else:
     l = args.api_key
 
-lib = itchio.Library(l)
+lib = itchiodl.Library(l)
 lib.load_games()
 lib.download_library()

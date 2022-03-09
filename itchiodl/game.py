@@ -6,7 +6,7 @@ import urllib
 
 
 
-import itchio.utils
+import itchiodl.utils
 
 class Game:   
     def __init__(self, data):
@@ -59,8 +59,8 @@ class Game:
             url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
             # response_code = urllib.request.urlopen(url).getcode()
             try:
-                itchio.utils.download(url, path, self.name +" - "+file)
-            except itchio.utils.NoDownloadError as e:
+                itchiodl.utils.download(url, path, self.name +" - "+file)
+            except itchiodl.utils.NoDownloadError as e:
                 print("Http response is not a download, skipping")
 
                 with open('errors.txt', 'a') as f:

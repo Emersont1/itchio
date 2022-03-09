@@ -1,7 +1,7 @@
 import requests
 import json
 
-from itchio.game import Game
+from itchiodl.game import Game
 
 class Library:
     def __init__(self, login):
