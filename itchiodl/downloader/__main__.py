@@ -33,7 +33,7 @@ def main():
     else:
         l = args.api_key
 
-    lib = itchiodl.Library(l)
+    lib = itchiodl.Library(l, args.jobs)
     lib.load_games()
     lib.download_library()
 
