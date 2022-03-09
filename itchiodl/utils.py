@@ -31,7 +31,7 @@ def download(url, path, desc):
     with open(f"{path}/{filename}", "wb") as f:
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
-        
+
         """
         # remove the progress bar output for multiple threads
         for chunk in progress.bar(
@@ -42,6 +42,6 @@ def download(url, path, desc):
                 f.write(chunk)
                 f.flush()
         """
-    
+
     print(f"Downloaded {filename}")
     return f"{path}/{filename}", True

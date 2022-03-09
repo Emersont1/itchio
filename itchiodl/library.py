@@ -34,5 +34,5 @@ class Library:
 
     def download_library(self):
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            dl = lambda g: g.download(self.login)
+            def dl(g): return g.download(self.login)
             executor.map(dl, self.games)
