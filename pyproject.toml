@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "itchiodl"
-version = "1.1.0"
+version = "1.1.1"
 description = "Python Scripts for downloading / archiving your itchio library"
 authors = ["Peter Taylor <me@et1.uk>"]
 license = "MIT"
+readme = "Readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
