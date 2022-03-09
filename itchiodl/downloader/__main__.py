@@ -15,6 +15,13 @@ def main():
         "--api-key",
         help="Use API key instead of username/password")
 
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=4,
+        help="Number of concurrent downloads, defaults to 4")
+
     args = parser.parse_args()
 
     l = ""
