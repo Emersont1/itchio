@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "itchiodl"
-version = "1.1.2"
+version = "1.2.0"
 description = "Python Scripts for downloading / archiving your itchio library"
 authors = ["Peter Taylor <me@et1.uk>"]
 license = "MIT"
@@ -17,3 +17,7 @@ clint = "^0.5.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."console_scripts"]
+"itch-download" = "itchiodl.downloader.__main__:main"
+"itch-load-bundle" = "itchiodl.bundle_tool.__main__:main"
