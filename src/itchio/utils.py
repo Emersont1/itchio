@@ -4,13 +4,15 @@ import os
 
 from clint.textui import progress
 
+class NoDownloadError(Exception):
+    pass
+
 def download(url, path, desc):
     print(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
     if rsp.headers.get('content-length') is None or rsp.headers.get("Content-Disposition") is None:
-        print(f"Http response is not a download, skipping")
-        return f"{path}", False
+        raise NoDownloadError("Http response is not a download, skipping")
 
     cd = rsp.headers.get("Content-Disposition")
     filename = re.search(r'filename="(.+)"', cd).group(1)

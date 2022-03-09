@@ -60,8 +60,22 @@ class Game:
             # response_code = urllib.request.urlopen(url).getcode()
             try:
                 itchio.utils.download(url, path, self.name +" - "+file)
+            except itchio.utils.NoDownloadError as e:
+                print("Http response is not a download, skipping")
+
+                with open('errors.txt', 'a') as f:
+                    f.write(f""" Cannot download game/asset: {self.game_slug}
+                    Publisher Name: {self.publisher_slug}
+                    Path: {path}
+                    File: {file}
+                    Request URL: {url}
+                    This request failed due to a missing response header
+                    This game/asset has been skipped please download manually
+                    ---------------------------------------------------------\n """)
+
+                continue
             except urllib.error.HTTPError as e:
-                print("This one has broken!!")
+                print("This one has broken due to an HTTP error!!")
 
                 with open('errors.txt', 'a') as f:
                     f.write(f""" Cannot download game/asset: {self.game_slug}
