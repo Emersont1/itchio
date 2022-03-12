@@ -4,6 +4,9 @@ from bs4 import BeautifulSoup as soup
 import requests
 
 
+warning = "Will print the response text (Please be careful as this may contain personal data or allow others to login to your account):"
+
+
 def LoginWeb(user, password):
     session = requests.Session()
 
@@ -30,10 +33,16 @@ def LoginAPI(user, password):
                        "password": password,
                        "source": "desktop"})
     if r.status_code != 200:
+        print(f"Error: {r.status_code} is not 200")
+        print(warning)
+        print(r.text)
         raise RuntimeError
     t = json.loads(r.text)
 
     if not t["success"]:
+        print(f"Error: success key is not true")
+        print(warning)
+        print(r.text)
         raise RuntimeError
 
     return t["key"]["key"]
