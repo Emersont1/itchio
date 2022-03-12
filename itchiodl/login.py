@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup as soup
 import requests
 
 
-
 warning = "Will print the response text (Please be careful as this may contain personal data or allow others to login to your account):"
 
 
