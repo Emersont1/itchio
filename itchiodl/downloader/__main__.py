@@ -3,13 +3,17 @@ from getpass import getpass
 
 import itchiodl
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog='python -m hstp',
         description='Build an '
     )
 
-    parser.add_argument("-k", "--api-key", help="Use API key instead of username/password")
+    parser.add_argument(
+        "-k",
+        "--api-key",
+        help="Use API key instead of username/password")
 
     args = parser.parse_args()
 
@@ -25,6 +29,7 @@ def main():
     lib = itchiodl.Library(l)
     lib.load_games()
     lib.download_library()
+
 
 if __name__ == "__main__":
     main()

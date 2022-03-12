@@ -3,6 +3,7 @@ import json
 
 from itchiodl.game import Game
 
+
 class Library:
     def __init__(self, login):
         self.login = login
@@ -10,9 +11,11 @@ class Library:
 
     def load_game_page(self, page):
         print("Loading page", page)
-        r = requests.get(f"https://api.itch.io/profile/owned-keys?page={page}", headers={"Authorization": self.login})
+        r = requests.get(
+            f"https://api.itch.io/profile/owned-keys?page={page}",
+            headers={
+                "Authorization": self.login})
         j = json.loads(r.text)
-
 
         for s in j["owned_keys"]:
             self.games.append(Game(s))
