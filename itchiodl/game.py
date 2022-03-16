@@ -104,4 +104,4 @@ class Game:
                 "itch_id": self.id,
                 "game_id": self.game_id,
                 "itch_data": self.data,
-            }, f)
+            }, f, indent=2)
