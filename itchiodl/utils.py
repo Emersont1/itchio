@@ -9,7 +9,10 @@ class NoDownloadError(Exception):
     pass
 
 
-def download(url, path, desc):
+def download(url, path, name, file):
+    """Downloads a file from a url and saves it to a path, skips it if it already exists."""
+
+    desc = f"{name} - {file}"
     print(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
@@ -18,7 +21,13 @@ def download(url, path, desc):
         raise NoDownloadError("Http response is not a download, skipping")
 
     cd = rsp.headers.get("Content-Disposition")
-    filename = re.search(r'filename="(.+)"', cd).group(1)
+
+    filename_re = re.search(r'filename="(.+)"', cd)
+    if filename_re is None:
+        filename = file
+    else:
+        filename = filename_re.group(1)
+
     total_length = int(rsp.headers.get('content-length'))
 
     if os.path.exists(f"{path}/{filename}"):
