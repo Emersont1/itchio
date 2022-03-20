@@ -38,6 +38,11 @@ def download(url, path, name, file):
             print(f"{filename} exists but is incomplete, downloading again")
 
     with open(f"{path}/{filename}", "wb") as f:
+        for chunk in rsp.iter_content(10240):
+            f.write(chunk)
+
+        """
+        # remove the progress bar output for multiple threads
         for chunk in progress.bar(
             rsp.iter_content(
                 chunk_size=1024), expected_size=(
@@ -45,4 +50,7 @@ def download(url, path, name, file):
             if chunk:
                 f.write(chunk)
                 f.flush()
+        """
+
+    print(f"Downloaded {filename}")
     return f"{path}/{filename}", True

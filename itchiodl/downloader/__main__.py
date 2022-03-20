@@ -15,6 +15,13 @@ def main():
         "--api-key",
         help="Use API key instead of username/password")
 
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=4,
+        help="Number of concurrent downloads, defaults to 4")
+
     args = parser.parse_args()
 
     l = ""
@@ -26,7 +33,7 @@ def main():
     else:
         l = args.api_key
 
-    lib = itchiodl.Library(l)
+    lib = itchiodl.Library(l, args.jobs)
     lib.load_games()
     lib.download_library()
 
