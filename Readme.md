@@ -23,7 +23,13 @@ This uses the same API the itchio app uses to download the files. If you have 2F
 python -m itchiodl.downloader --api-key=KEYHERE --jobs=4
 
 # via setup-tools entry point
+itch-download -k KEYHERE
+
+# download with multiple threads
 itch-download -k KEYHERE -j 4
+
+# only download osx or cross platform downloads
+itch-download -p osx
 ```
 
 ## Add All Games in a bundle to your library

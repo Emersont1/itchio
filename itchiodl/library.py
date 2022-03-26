@@ -32,7 +32,7 @@ class Library:
                 break
             page += 1
 
-    def download_library(self):
+    def download_library(self, platform=None):
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            def dl(g): return g.download(self.login)
+            def dl(g): return g.download(self.login, platform)
             executor.map(dl, self.games)

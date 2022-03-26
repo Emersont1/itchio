@@ -16,6 +16,11 @@ def main():
         help="Use API key instead of username/password")
 
     parser.add_argument(
+        "-p",
+        "--platform",
+        help="Platform to download for (default: all), will accept values like 'windows', 'linux', 'osx' and android")
+
+    parser.add_argument(
         "-j",
         "--jobs",
         type=int,
@@ -35,7 +40,7 @@ def main():
 
     lib = itchiodl.Library(l, args.jobs)
     lib.load_games()
-    lib.download_library()
+    lib.download_library(args.platform)
 
 
 if __name__ == "__main__":

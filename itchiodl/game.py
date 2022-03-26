@@ -34,7 +34,7 @@ class Game:
         for d in j["uploads"]:
             self.downloads.append(d)
 
-    def download(self, token):
+    def download(self, token, platform):
         if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
             print(f"Skipping Game {self.name}")
             return
@@ -48,6 +48,10 @@ class Game:
             os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
 
         for d in self.downloads:
+            if platform is not None and d["traits"] and f"p_{platform}" not in d["traits"]:
+                print(f"Skipping {self.name} for platform {d['traits']}")
+                continue
+
             file = d['filename'] or d['display_name'] or d['id']
             path = f"{self.publisher_slug}/{self.game_slug}"
             if os.path.exists(f"{path}/{file}"):
