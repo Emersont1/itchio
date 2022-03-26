@@ -23,6 +23,9 @@ python -m itchiodl.downloader --api-key=KEYHERE
 
 # via setup-tools entry point
 itch-download -k KEYHERE
+
+# only download osx or cross platform downloads
+itch-download -p osx
 ```
 
 ## Add All Games in a bundle to your library

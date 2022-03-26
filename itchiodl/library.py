@@ -30,6 +30,6 @@ class Library:
                 break
             page += 1
 
-    def download_library(self):
+    def download_library(self, platform = None):
         for game in self.games:
-            game.download(self.login)
+            game.download(self.login, platform)
