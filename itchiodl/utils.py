@@ -1,6 +1,7 @@
 import requests
 import re
 import os
+import sys
 
 from clint.textui import progress
 
@@ -46,3 +47,12 @@ def download(url, path, name, file):
                 f.write(chunk)
                 f.flush()
     return f"{path}/{filename}", True
+
+
+def clean_path(path):
+    """Cleans a path on windows"""
+    if sys.platform in ["win32", "cygwin", "msys"]:
+        path_clean = re.replace(r'[\<\>\:\"\/\\\|\?\*]', "-", path)
+        return path_clean
+    return path
+
