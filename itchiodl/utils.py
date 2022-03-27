@@ -29,15 +29,6 @@ def download(url, path, name, file):
     else:
         filename = filename_re.group(1)
 
-    total_length = int(rsp.headers.get('content-length'))
-
-    if os.path.exists(f"{path}/{filename}"):
-        if os.path.getsize(f"{path}/{filename}") == total_length:
-            print(f"{filename} already exists, skipping")
-            return f"{path}/{filename}", False
-        else:
-            print(f"{filename} exists but is incomplete, downloading again")
-
     with open(f"{path}/{filename}", "wb") as f:
         for chunk in rsp.iter_content(10240):
             f.write(chunk)

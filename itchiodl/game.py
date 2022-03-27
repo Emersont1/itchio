@@ -52,9 +52,8 @@ class Game:
                 print(f"Skipping {self.name} for platform {d['traits']}")
                 continue
 
-            file = d['filename'] or d['display_name'] or d['id']
-            path = itchiodl.utils.clean_path(
-                f"{self.publisher_slug}/{self.game_slug}")
+            file = itchiodl.utils.clean_path(d['filename'] or d['display_name'] or d['id'])
+            path = f"{self.publisher_slug}/{self.game_slug}"
             if os.path.exists(f"{path}/{file}"):
                 print(f"Skipping {path}/{file}")
                 continue
