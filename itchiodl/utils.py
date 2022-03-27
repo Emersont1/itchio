@@ -55,4 +55,3 @@ def clean_path(path):
         path_clean = re.replace(r'[\<\>\:\"\/\\\|\?\*]', "-", path)
         return path_clean
     return path
-
