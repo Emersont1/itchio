@@ -73,7 +73,8 @@ class Game:
 
         file = itchiodl.utils.clean_path(
             d['filename'] or d['display_name'] or d['id'])
-        path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
+        path = itchiodl.utils.clean_path(
+            f"{self.publisher_slug}/{self.game_slug}")
 
         if os.path.exists(f"{path}/{file}"):
             print(f"File Already Exists! {file}")
