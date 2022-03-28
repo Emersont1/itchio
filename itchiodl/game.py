@@ -3,6 +3,8 @@ import requests
 import json
 import os
 import urllib
+import datetime
+import time
 
 
 import itchiodl.utils
@@ -35,9 +37,9 @@ class Game:
             self.downloads.append(d)
 
     def download(self, token, platform):
-        if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
-            print(f"Skipping Game {self.name}")
-            return
+        #if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
+        #    print(f"Skipping Game {self.name}")
+        #    return
 
         self.load_downloads(token)
 
@@ -54,9 +56,34 @@ class Game:
 
             file = itchiodl.utils.clean_path(d['filename'] or d['display_name'] or d['id'])
             path = f"{self.publisher_slug}/{self.game_slug}"
+            
             if os.path.exists(f"{path}/{file}"):
-                print(f"Skipping {path}/{file}")
-                continue
+                if os.path.exists(f"{path}/{file}.md5"):
+                    with open(f"{path}/{file}.md5", "r") as f:
+                        md5 = f.read()
+                        if md5 == d["md5"]:
+                            print(f"Skipping {self.name} - {file}")
+                            continue
+                else:
+                    md5 = itchiodl.utils.md5sum(f"{path}/{file}")
+                    if md5 == d["md5"]:
+                        print(f"Skipping {self.name} - {file}")
+                        
+                        # Create checksum file
+                        with open(f"{path}/{file}.md5", "w") as f:
+                            f.write(d["md5_hash"])
+                        continue
+                    else: # Old Download or corrupted file?
+                        corrupted = False
+                        if corrupted:
+                            os.remove(f"{path}/{file}")
+                            continue
+
+                if not os.path.exists(f"{path}/{file}/old"):
+                    os.mkdir(f"{path}/{file}/old")
+                timestamp = datetime.datetime.now.strftime('%Y-%m-%d')
+                os.rename(f"{path}/{file}", f"{path}/{file}/old/{timestamp}-{file}")
+                
 
             # Get UUID
             r = requests.post(
@@ -99,10 +126,20 @@ class Game:
                     ---------------------------------------------------------\n """)
 
                 continue
+            
+            # Verify
+            if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+                print(f"Failed to verify {file}")
+                continue
+            
+            # Create checksum file
+            with open(f"{path}/{file}.md5", "w") as f:
+                f.write(d["md5_hash"])
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump({
                 "name": self.name,
+                "dl_version": 2,
                 "publisher": self.publisher,
                 "link": self.link,
                 "itch_id": self.id,

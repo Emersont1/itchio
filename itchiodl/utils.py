@@ -2,6 +2,7 @@ import requests
 import re
 import os
 import sys
+import hashlib
 
 from clint.textui import progress
 
@@ -54,3 +55,11 @@ def clean_path(path):
         path_clean = re.replace(r'[\<\>\:\"\/\\\|\?\*]', "-", path)
         return path_clean
     return path
+
+def md5sum(path):
+    """Returns the md5sum of a file"""
+    md5 = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5.update(chunk)
+    return md5.hexdigest()
