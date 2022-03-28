@@ -56,6 +56,7 @@ def clean_path(path):
         return path_clean
     return path
 
+
 def md5sum(path):
     """Returns the md5sum of a file"""
     md5 = hashlib.md5()

@@ -39,7 +39,7 @@ class Game:
     def download(self, token, platform):
         print("Downloading", self.name)
 
-        #if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
+        # if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
         #    print(f"Skipping Game {self.name}")
         #    return
 
@@ -68,65 +68,65 @@ class Game:
                 "itch_data": self.data,
             }, f)
 
-    def do_download(self, d,token):
-            print(f"Downloading {d['filename']}")
-            
+    def do_download(self, d, token):
+        print(f"Downloading {d['filename']}")
 
-            file = itchiodl.utils.clean_path(d['filename'] or d['display_name'] or d['id'])
-            path = f"{self.publisher_slug}/{self.game_slug}"
-            
-            if os.path.exists(f"{path}/{file}"):
-                print(f"File Already Exists! {file}")
-                if os.path.exists(f"{path}/{file}.md5"):
+        file = itchiodl.utils.clean_path(
+            d['filename'] or d['display_name'] or d['id'])
+        path = f"{self.publisher_slug}/{self.game_slug}"
 
-                    with open(f"{path}/{file}.md5", "r") as f:
-                        md5 = f.read().strip()
+        if os.path.exists(f"{path}/{file}"):
+            print(f"File Already Exists! {file}")
+            if os.path.exists(f"{path}/{file}.md5"):
 
-                        if md5 == d["md5_hash"]:
-                            print(f"Skipping {self.name} - {file}")
-                            return
-                        else:
-                            print(f"MD5 Mismatch! {file}")
-                else:
-                    md5 = itchiodl.utils.md5sum(f"{path}/{file}")
+                with open(f"{path}/{file}.md5", "r") as f:
+                    md5 = f.read().strip()
+
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {file}")
-                        
-                        # Create checksum file
-                        with open(f"{path}/{file}.md5", "w") as f:
-                            f.write(d["md5_hash"])
                         return
-                    else: # Old Download or corrupted file?
-                        corrupted = False
-                        if corrupted:
-                            os.remove(f"{path}/{file}")
-                            return
+                    else:
+                        print(f"MD5 Mismatch! {file}")
+            else:
+                md5 = itchiodl.utils.md5sum(f"{path}/{file}")
+                if md5 == d["md5_hash"]:
+                    print(f"Skipping {self.name} - {file}")
 
-                if not os.path.exists(f"{path}/old"):
-                    os.mkdir(f"{path}/old")
+                    # Create checksum file
+                    with open(f"{path}/{file}.md5", "w") as f:
+                        f.write(d["md5_hash"])
+                    return
+                else:  # Old Download or corrupted file?
+                    corrupted = False
+                    if corrupted:
+                        os.remove(f"{path}/{file}")
+                        return
 
-                print(f"Moving {file} to old/")
-                timestamp = datetime.datetime.now().strftime('%Y-%m-%d')
-                print(timestamp)
-                shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
+            if not os.path.exists(f"{path}/old"):
+                os.mkdir(f"{path}/old")
 
-            # Get UUID
-            r = requests.post(
-                f"https://api.itch.io/games/{self.game_id}/download-sessions",
-                headers={
-                    "Authorization": token})
-            j = r.json()
+            print(f"Moving {file} to old/")
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d')
+            print(timestamp)
+            shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
 
-            # Download
-            url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
-            # response_code = urllib.request.urlopen(url).getcode()
-            try:
-                itchiodl.utils.download(url, path, self.name, file)
-            except itchiodl.utils.NoDownloadError as e:
-                print("Http response is not a download, skipping")
+        # Get UUID
+        r = requests.post(
+            f"https://api.itch.io/games/{self.game_id}/download-sessions",
+            headers={
+                "Authorization": token})
+        j = r.json()
 
-                with open('errors.txt', 'a') as f:
-                    f.write(f""" Cannot download game/asset: {self.game_slug}
+        # Download
+        url = f"https://api.itch.io/uploads/{d['id']}/download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
+        # response_code = urllib.request.urlopen(url).getcode()
+        try:
+            itchiodl.utils.download(url, path, self.name, file)
+        except itchiodl.utils.NoDownloadError as e:
+            print("Http response is not a download, skipping")
+
+            with open('errors.txt', 'a') as f:
+                f.write(f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
                     Path: {path}
                     File: {file}
@@ -135,12 +135,12 @@ class Game:
                     This game/asset has been skipped please download manually
                     ---------------------------------------------------------\n """)
 
-                return
-            except urllib.error.HTTPError as e:
-                print("This one has broken due to an HTTP error!!")
+            return
+        except urllib.error.HTTPError as e:
+            print("This one has broken due to an HTTP error!!")
 
-                with open('errors.txt', 'a') as f:
-                    f.write(f""" Cannot download game/asset: {self.game_slug}
+            with open('errors.txt', 'a') as f:
+                f.write(f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
                     Path: {path}
                     File: {file}
@@ -150,13 +150,13 @@ class Game:
                     This game/asset has been skipped please download manually
                     ---------------------------------------------------------\n """)
 
-                return
-            
-            # Verify
-            if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-                print(f"Failed to verify {file}")
-                return
-            
-            # Create checksum file
-            with open(f"{path}/{file}.md5", "w") as f:
-                f.write(d["md5_hash"])
+            return
+
+        # Verify
+        if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+            print(f"Failed to verify {file}")
+            return
+
+        # Create checksum file
+        with open(f"{path}/{file}.md5", "w") as f:
+            f.write(d["md5_hash"])
