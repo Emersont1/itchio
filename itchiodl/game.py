@@ -60,13 +60,12 @@ class Game:
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump({
                 "name": self.name,
-                "dl_version": 2,
                 "publisher": self.publisher,
                 "link": self.link,
                 "itch_id": self.id,
                 "game_id": self.game_id,
                 "itch_data": self.data,
-            }, f)
+            }, f, indent=2)
 
     def do_download(self, d, token):
         print(f"Downloading {d['filename']}")
