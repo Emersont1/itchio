@@ -1,13 +1,15 @@
 import requests
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 from itchiodl.game import Game
 
 
 class Library:
-    def __init__(self, login):
+    def __init__(self, login, jobs=4):
         self.login = login
         self.games = []
+        self.jobs = jobs
 
     def load_game_page(self, page):
         print("Loading page", page)
@@ -30,6 +32,7 @@ class Library:
                 break
             page += 1
 
-    def download_library(self):
-        for game in self.games:
-            game.download(self.login)
+    def download_library(self, platform=None):
+        with ThreadPoolExecutor(max_workers=self.jobs) as executor:
+            def dl(g): return g.download(self.login, platform)
+            executor.map(dl, self.games)
