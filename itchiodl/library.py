@@ -1,6 +1,5 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
-import re
 import requests
 
 from itchiodl.game import Game
