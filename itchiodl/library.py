@@ -43,7 +43,8 @@ class Library:
             f"https://{publisher}.itch.io/{title}/data.json",
             headers={"Authorization": self.login},
         )
-        self.games.append(Game(publisher, title))
+        j = json.loads(r.text)
+        self.games.append(Game(j["id"]))
 
     def load_games(self, publisher):
         """Load all games by publisher"""
