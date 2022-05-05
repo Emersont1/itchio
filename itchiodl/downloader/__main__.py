@@ -5,27 +5,25 @@ import itchiodl
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog='python -m hstp',
-        description='Build an '
-    )
+    parser = argparse.ArgumentParser(prog="python -m hstp", description="Build an ")
 
     parser.add_argument(
-        "-k",
-        "--api-key",
-        help="Use API key instead of username/password")
+        "-k", "--api-key", help="Use API key instead of username/password"
+    )
 
     parser.add_argument(
         "-p",
         "--platform",
-        help="Platform to download for (default: all), will accept values like 'windows', 'linux', 'osx' and android")
+        help="Platform to download for (default: all), will accept values like 'windows', 'linux', 'osx' and android",
+    )
 
     parser.add_argument(
         "-j",
         "--jobs",
         type=int,
         default=4,
-        help="Number of concurrent downloads, defaults to 4")
+        help="Number of concurrent downloads, defaults to 4",
+    )
 
     args = parser.parse_args()
 

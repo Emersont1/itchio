@@ -1,14 +1,11 @@
-import requests
 import re
-import os
 import sys
 import hashlib
-
-from clint.textui import progress
+import requests
 
 
 class NoDownloadError(Exception):
-    pass
+    """No download found exception"""
 
 
 def download(url, path, name, file):
@@ -18,8 +15,10 @@ def download(url, path, name, file):
     print(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
-    if rsp.headers.get(
-            'content-length') is None or rsp.headers.get("Content-Disposition") is None:
+    if (
+        rsp.headers.get("content-length") is None
+        or rsp.headers.get("Content-Disposition") is None
+    ):
         raise NoDownloadError("Http response is not a download, skipping")
 
     cd = rsp.headers.get("Content-Disposition")
@@ -34,17 +33,6 @@ def download(url, path, name, file):
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
-        """
-        # remove the progress bar output for multiple threads
-        for chunk in progress.bar(
-            rsp.iter_content(
-                chunk_size=1024), expected_size=(
-                total_length / 1024) + 1):
-            if chunk:
-                f.write(chunk)
-                f.flush()
-        """
-
     print(f"Downloaded {filename}")
     return f"{path}/{filename}", True
 
@@ -52,7 +40,7 @@ def download(url, path, name, file):
 def clean_path(path):
     """Cleans a path on windows"""
     if sys.platform in ["win32", "cygwin", "msys"]:
-        path_clean = re.replace(r'[\<\>\:\"\/\\\|\?\*]', "-", path)
+        path_clean = re.replace(r"[\<\>\:\"\/\\\|\?\*]", "-", path)
         return path_clean
     return path
 
