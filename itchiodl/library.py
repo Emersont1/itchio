@@ -42,6 +42,7 @@ class Library:
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             i = 0
             l = len(self.games)
+
             def dl(g):
                 x = g.download(self.login, platform)
                 print(f"Downloaded {i} games of {l}")
