@@ -1,5 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+import re
 import requests
 
 from itchiodl.game import Game
@@ -38,9 +39,13 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
-        with ThreadPoolExecutor(max_workers=self.jobs) as executor:
 
+        with ThreadPoolExecutor(max_workers=self.jobs) as executor:
+            i = 0
+            l = len(self.games)
             def dl(g):
-                return g.download(self.login, platform)
+                x = g.download(self.login, platform)
+                print(f"Downloaded {i} games of {l}")
+                return x
 
             executor.map(dl, self.games)
