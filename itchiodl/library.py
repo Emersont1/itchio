@@ -1,6 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 import requests
+from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
 
@@ -27,7 +28,7 @@ class Library:
 
         return len(j["owned_keys"])
 
-    def load_games(self):
+    def load_owned_games(self):
         """Load all games in the library via the API"""
         page = 1
         while True:
@@ -35,6 +36,21 @@ class Library:
             if n == 0:
                 break
             page += 1
+
+    def load_game(self, publisher, title):
+        """Load a game by publisher and title"""
+        requests.get(
+            f"https://{publisher}.itch.io/{title}/data.json",
+            headers={"Authorization": self.login},
+        )
+        self.games.append(Game(publisher, title))
+
+    def load_games(self, publisher):
+        """Load all games by publisher"""
+        rsp = requests.get(f"https://{publisher}.itch.io")
+        soup = BeautifulSoup(rsp.text, "html.parser")
+        for link in soup.select("a.game-link"):
+            self.games.append(Game(link.get("data-label").split(":")[1]))
 
     def download_library(self, platform=None):
         """Download all games in the library"""
