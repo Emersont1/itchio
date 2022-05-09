@@ -45,6 +45,7 @@ class Library:
 
             def dl(g):
                 x = g.download(self.login, platform)
+                i += 1
                 print(f"Downloaded {i} games of {l}")
                 return x
 
