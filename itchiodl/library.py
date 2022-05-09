@@ -1,7 +1,8 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
-import requests
 import functools
+import requests
+import threading
 
 from itchiodl.game import Game
 
@@ -43,10 +44,12 @@ class Library:
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             i = [0]
             l = len(self.games)
+            lock = threading.RLock()
 
             def dl(i, g):
                 x = g.download(self.login, platform)
-                i[0] += 1
+                with lock:
+                    i[0] += 1
                 print(f"Downloaded {g.name} ({i[0]} of {l})")
                 return x
 
