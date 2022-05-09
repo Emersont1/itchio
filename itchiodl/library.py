@@ -1,8 +1,8 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
-import requests
 import threading
+import requests
 
 from itchiodl.game import Game
 
