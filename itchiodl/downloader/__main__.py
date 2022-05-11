@@ -52,7 +52,7 @@ def main():
     lib = itchiodl.Library(l, args.jobs)
 
     if args.download_publisher:
-        lib.load_game(args.download_publisher)
+        lib.load_games(args.download_publisher)
     elif args.download_game:
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
         lib.load_game(matches.group(1), matches.group(2))

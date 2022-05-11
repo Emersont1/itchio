@@ -18,9 +18,13 @@ class Game:
         self.name = self.data["title"]
         self.publisher = self.data["user"]["username"]
         self.link = self.data["url"]
-
-        self.id = data["id"]
-        self.game_id = data["game_id"]
+        if "game_id" in self.data:
+            self.id = self.data["id"]
+            self.game_id = self.data["game_id"]
+        else:
+            self.id = False
+            self.game_id = self.data["id"]
+        
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
@@ -32,8 +36,14 @@ class Game:
     def load_downloads(self, token):
         """Load all downloads for this game"""
         self.downloads = []
-        r = requests.get(
+        if self.id:
+            r = requests.get(
             f"https://api.itch.io/games/{self.game_id}/uploads?download_key_id={self.id}",
+            headers={"Authorization": token},
+        )
+        else:
+            r = requests.get(
+            f"https://api.itch.io/games/{self.game_id}/uploads",
             headers={"Authorization": token},
         )
         j = r.json()
@@ -129,10 +139,16 @@ class Game:
         j = r.json()
 
         # Download
-        url = (
+        if self.id:
+            url = (
             f"https://api.itch.io/uploads/{d['id']}/"
             + f"download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
-        )
+            )
+        else:
+            url = (
+            f"https://api.itch.io/uploads/{d['id']}/"
+            + f"download?api_key={token}&uuid={j['uuid']}"
+            )
         # response_code = urllib.request.urlopen(url).getcode()
         try:
             itchiodl.utils.download(url, path, self.name, file)
