@@ -1,5 +1,6 @@
 import argparse
 from getpass import getpass
+import re
 
 import itchiodl
 
@@ -25,6 +26,18 @@ def main():
         help="Number of concurrent downloads, defaults to 4",
     )
 
+    parser.add_argument(
+        "--download-publisher",
+        type=str,
+        help="Download all games from a specific publisher",
+    )
+
+    parser.add_argument(
+        "--download-game",
+        type=str,
+        help="Download a specific game, should be in the format publisher.itch.io/game",
+    )
+
     args = parser.parse_args()
 
     l = ""
@@ -37,7 +50,15 @@ def main():
         l = args.api_key
 
     lib = itchiodl.Library(l, args.jobs)
-    lib.load_games()
+
+    if args.download_publisher:
+        lib.load_games(args.download_publisher)
+    elif args.download_game:
+        matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
+        lib.load_game(matches.group(1), matches.group(2))
+    else:
+        lib.load_owned_games()
+
     lib.download_library(args.platform)
 
 

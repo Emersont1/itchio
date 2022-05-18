@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
 import requests
+from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
 
@@ -29,7 +30,7 @@ class Library:
 
         return len(j["owned_keys"])
 
-    def load_games(self):
+    def load_owned_games(self):
         """Load all games in the library via the API"""
         page = 1
         while True:
@@ -38,9 +39,36 @@ class Library:
                 break
             page += 1
 
+    def load_game(self, publisher, title):
+        """Load a game by publisher and title"""
+        rsp = requests.get(
+            f"https://{publisher}.itch.io/{title}/data.json",
+            headers={"Authorization": self.login},
+        )
+        j = json.loads(rsp.text)
+        game_id = j["id"]
+        gsp = requests.get(
+            f"https://api.itch.io/games/{game_id}",
+            headers={"Authorization": self.login},
+        )
+        k = json.loads(gsp.text)
+        self.games.append(Game(k))
+
+    def load_games(self, publisher):
+        """Load all games by publisher"""
+        rsp = requests.get(f"https://{publisher}.itch.io")
+        soup = BeautifulSoup(rsp.text, "html.parser")
+        for link in soup.select("a.game_link"):
+            game_id = link.get("data-label").split(":")[1]
+            gsp = requests.get(
+                f"https://api.itch.io/games/{game_id}",
+                headers={"Authorization": self.login},
+            )
+            k = json.loads(gsp.text)
+            self.games.append(Game(k))
+
     def download_library(self, platform=None):
         """Download all games in the library"""
-
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             i = [0]
             l = len(self.games)
