@@ -48,7 +48,7 @@ class Library:
         gsp = requests.get(
             f"https://api.itch.io/games/{game_id}",
             headers={"Authorization": self.login},
-            )
+        )
         self.games.append(Game(json.loads(gsp.text)))
 
     def load_games(self, publisher):
