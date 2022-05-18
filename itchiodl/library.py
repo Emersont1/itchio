@@ -1,5 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+import functools
+import threading
 import requests
 from bs4 import BeautifulSoup
 
@@ -67,14 +69,16 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
-
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            i = 0
+            i = [0]
             l = len(self.games)
+            lock = threading.RLock()
 
-            def dl(g):
+            def dl(i, g):
                 x = g.download(self.login, platform)
-                print(f"Downloaded {i} games of {l}")
+                with lock:
+                    i[0] += 1
+                print(f"Downloaded {g.name} ({i[0]} of {l})")
                 return x
 
-            executor.map(dl, self.games)
+            executor.map(functools.partial(dl, i), self.games)
