@@ -49,7 +49,8 @@ class Library:
             f"https://api.itch.io/games/{game_id}",
             headers={"Authorization": self.login},
         )
-        self.games.append(Game(json.loads(gsp.text)))
+        k = json.loads(gsp.text)
+        self.games.append(Game(k))
 
     def load_games(self, publisher):
         """Load all games by publisher"""
@@ -61,7 +62,8 @@ class Library:
                 f"https://api.itch.io/games/{game_id}",
                 headers={"Authorization": self.login},
             )
-            self.games.append(Game(json.loads(gsp.text)))
+            k = json.loads(gsp.text)
+            self.games.append(Game(k))
 
     def download_library(self, platform=None):
         """Download all games in the library"""
