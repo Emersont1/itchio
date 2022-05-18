@@ -44,14 +44,24 @@ class Library:
             headers={"Authorization": self.login},
         )
         j = json.loads(rsp.text)
-        self.games.append(Game(j["id"]))
+        game_id = j["id"]
+        gsp = requests.get(
+            f"https://api.itch.io/games/{game_id}",
+            headers={"Authorization": self.login},
+            )
+        self.games.append(Game(json.loads(gsp.text)))
 
     def load_games(self, publisher):
         """Load all games by publisher"""
         rsp = requests.get(f"https://{publisher}.itch.io")
         soup = BeautifulSoup(rsp.text, "html.parser")
-        for link in soup.select("a.game-link"):
-            self.games.append(Game(link.get("data-label").split(":")[1]))
+        for link in soup.select("a.game_link"):
+            game_id = link.get("data-label").split(":")[1]
+            gsp = requests.get(
+                f"https://api.itch.io/games/{game_id}",
+                headers={"Authorization": self.login},
+            )
+            self.games.append(Game(json.loads(gsp.text)))
 
     def download_library(self, platform=None):
         """Download all games in the library"""
