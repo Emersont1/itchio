@@ -29,6 +29,13 @@ class Game:
         self.game_slug = matches.group(2)
         self.publisher_slug = matches.group(1)
 
+        if "VerboseFolders" in globals():
+            self.destination_folder = self.game_slug if not VerboseFolders else self.name
+        else:
+            self.destination_folder = self.game_slug
+            print("VerboseFolders Not Detected in Global Variables, Falling Back to Game Slug\n")
+        self.destination_path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.destination_folder}")
+
         self.files = []
         self.downloads = []
 
@@ -62,8 +69,8 @@ class Game:
         if not os.path.exists(self.publisher_slug):
             os.mkdir(self.publisher_slug)
 
-        if not os.path.exists(f"{self.publisher_slug}/{self.game_slug}"):
-            os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
+        if not os.path.exists(self.destination_path):
+            os.mkdir(self.destination_path)
 
         for d in self.downloads:
             if (
@@ -75,7 +82,7 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
+        with open(f"{self.destination_path}.json", "w") as f:
             json.dump(
                 {
                     "name": self.name,
@@ -94,7 +101,7 @@ class Game:
         print(f"Downloading {d['filename']}")
 
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
-        path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
+        path = self.destination_path
 
         if os.path.exists(f"{path}/{file}"):
             print(f"File Already Exists! {file}")

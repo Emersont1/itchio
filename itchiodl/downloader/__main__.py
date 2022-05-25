@@ -19,6 +19,22 @@ def main():
     )
 
     parser.add_argument(
+        "-vf",
+        "--verbose-folders",
+        type=bool,
+        default=False,
+        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title"
+    )
+
+    parser.add_argument(
+        "-sas",
+        "--skip-above-size",
+        type=float,
+        default=float('inf'),
+        help="Skips individual files that are above the specified size threshold, size in MB"
+    )
+
+    parser.add_argument(
         "-j",
         "--jobs",
         type=int,
@@ -41,6 +57,10 @@ def main():
     args = parser.parse_args()
 
     l = ""
+    global SkipAboveSize
+    SkipAboveSize = args.skip_above_size
+    global VerboseFolders
+    VerboseFolders = args.verbose_folders
 
     if not args.api_key:
         user = input("Username: ")
