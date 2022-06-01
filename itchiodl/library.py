@@ -27,6 +27,8 @@ class Library:
 
         for s in j["owned_keys"]:
             self.games.append(Game(s))
+            self.games[-1].id = s["id"]
+            self.games[-1].game_id = s["game_id"]
 
         return len(j["owned_keys"])
 

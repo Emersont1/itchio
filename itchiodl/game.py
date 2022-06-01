@@ -16,18 +16,18 @@ class Game:
     def __init__(self, data):
         self.data = data["game"]
         self.name = self.data["title"]
-        self.publisher = self.data["user"]["username"]
+        self.publisher = self.data.get("user").get("display_name")
         self.link = self.data["url"]
-        if "game_id" in self.data:
-            self.id = self.data["id"]
-            self.game_id = self.data["game_id"]
-        else:
-            self.id = False
-            self.game_id = self.data["id"]
+        #if "game_id" in self.data:
+        #    self.id = self.data["id"]
+        #    self.game_id = self.data["game_id"]
+        #else:
+        #    self.id = False
+        #    self.game_id = self.data["id"]
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
-        self.publisher_slug = matches.group(1)
+        self.publisher_slug = self.publisher
 
         #if "VerboseFolders" in globals():
         #    self.destination_folder = self.game_slug if not VerboseFolders else self.name
@@ -88,7 +88,6 @@ class Game:
                     "name": self.name,
                     "publisher": self.publisher,
                     "link": self.link,
-                    "itch_id": self.id,
                     "game_id": self.game_id,
                     "itch_data": self.data,
                 },
