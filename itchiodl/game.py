@@ -29,12 +29,12 @@ class Game:
         self.game_slug = matches.group(2)
         self.publisher_slug = matches.group(1)
 
-        if "VerboseFolders" in globals():
-            self.destination_folder = self.game_slug if not VerboseFolders else self.name
-        else:
-            self.destination_folder = self.game_slug
-            print("VerboseFolders Not Detected in Global Variables, Falling Back to Game Slug\n")
-        self.destination_path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.destination_folder}")
+        #if "VerboseFolders" in globals():
+        #    self.destination_folder = self.game_slug if not VerboseFolders else self.name
+        #else:
+        #    self.destination_folder = self.game_slug
+        #    print("VerboseFolders Not Detected in Global Variables, Falling Back to Game Slug\n")
+        self.destination_path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.name}")
 
         self.files = []
         self.downloads = []

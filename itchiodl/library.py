@@ -11,7 +11,7 @@ from itchiodl.game import Game
 class Library:
     """Representation of a user's game library"""
 
-    def __init__(self, login, jobs=4):
+    def __init__(self, login, jobs=1):
         self.login = login
         self.games = []
         self.jobs = jobs

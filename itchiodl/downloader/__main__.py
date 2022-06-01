@@ -38,7 +38,7 @@ def main():
         "-j",
         "--jobs",
         type=int,
-        default=4,
+        default=1,
         help="Number of concurrent downloads, defaults to 4",
     )
 
