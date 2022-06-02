@@ -2,6 +2,7 @@ import re
 import sys
 import hashlib
 import requests
+import os
 
 
 class NoDownloadError(Exception):
@@ -39,10 +40,10 @@ def download(url, path, name, file):
 
 def clean_path(path):
     """Cleans a path on windows"""
-    if sys.platform in ["win32", "cygwin", "msys"]:
-        path_clean = path.replace(r"[\<\>\:\"\/\\\|\?\*]", "-")
-        return path_clean
-    return path
+    #if sys.platform in ["win32", "cygwin", "msys"]:
+    path_clean = re.sub(r"[\<\>\:\"\/\\\|\?\*]", "-", path)
+    return path_clean
+    #return path
 
 
 def md5sum(path):

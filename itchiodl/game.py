@@ -15,26 +15,22 @@ class Game:
 
     def __init__(self, data):
         self.data = data["game"]
-        self.name = self.data["title"]
+        self.name = itchiodl.utils.clean_path(self.data["title"])
         self.publisher = self.data.get("user").get("display_name")
+        if not self.publisher:
+            self.publisher = self.data.get("user").get("username")
         self.link = self.data["url"]
-        #if "game_id" in self.data:
-        #    self.id = self.data["id"]
-        #    self.game_id = self.data["game_id"]
-        #else:
-        #    self.id = False
-        #    self.game_id = self.data["id"]
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
-        self.publisher_slug = self.publisher
+        self.publisher_slug = itchiodl.utils.clean_path(self.publisher)
 
         #if "VerboseFolders" in globals():
         #    self.destination_folder = self.game_slug if not VerboseFolders else self.name
         #else:
         #    self.destination_folder = self.game_slug
         #    print("VerboseFolders Not Detected in Global Variables, Falling Back to Game Slug\n")
-        self.destination_path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.name}")
+        self.destination_path = os.path.normpath(f"{self.publisher_slug}/{self.name}")
 
         self.files = []
         self.downloads = []
@@ -60,17 +56,10 @@ class Game:
         """Download a singular file"""
         print("Downloading", self.name)
 
-        # if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
-        #    print(f"Skipping Game {self.name}")
-        #    return
-
         self.load_downloads(token)
 
-        if not os.path.exists(self.publisher_slug):
-            os.mkdir(self.publisher_slug)
-
         if not os.path.exists(self.destination_path):
-            os.mkdir(self.destination_path)
+            os.makedirs(self.destination_path)
 
         for d in self.downloads:
             if (
@@ -150,6 +139,7 @@ class Game:
                 + f"download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
             )
         else:
+            print("!! NO DOWNLOAD KEY !!")
             url = (
                 f"https://api.itch.io/uploads/{d['id']}/"
                 + f"download?api_key={token}&uuid={j['uuid']}"
@@ -192,10 +182,10 @@ class Game:
             return
 
         # Verify
-        if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-            print(f"Failed to verify {file}")
-            return
+        #if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+        #    print(f"Failed to verify {file}")
+        #    return
 
         # Create checksum file
-        with open(f"{path}/{file}.md5", "w") as f:
-            f.write(d["md5_hash"])
+        #with open(f"{path}/{file}.md5", "w") as f:
+        #    f.write(d["md5_hash"])
