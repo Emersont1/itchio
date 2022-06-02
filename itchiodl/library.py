@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
 
-
 class Library:
     """Representation of a user's game library"""
 
