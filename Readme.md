@@ -25,11 +25,20 @@ python -m itchiodl.downloader --api-key=KEYHERE --jobs=4
 # via setup-tools entry point
 itch-download -k KEYHERE
 
-# download with multiple threads
+# download with multiple threads, default is 4 if unspecified
 itch-download -k KEYHERE -j 4
 
 # only download osx or cross platform downloads
 itch-download -p osx
+
+# folder structure uses display names for users/publishers and game titles
+itch-download -vf
+
+# skips downloads above a certain size in megabytes, supports decimals
+itch-download -sas 50.0
+
+# verifies downloads and creates an additional .md5 file for each download
+itch-download -v
 ```
 
 ## Add All Games in a bundle to your library

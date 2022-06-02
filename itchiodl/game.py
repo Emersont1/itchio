@@ -5,6 +5,7 @@ import urllib
 import datetime
 import shutil
 import requests
+import sys
 
 
 import itchiodl.utils
@@ -14,22 +15,41 @@ class Game:
     """Representation of a game download"""
 
     def __init__(self, data):
+        self.args = sys.argv[1:]
+        if '-vf' or '--verbose-folders' in self.args:
+            self.verbose = True
+        else:
+            self.verbose = False
+        if '-v' or '--verify' in self.args:
+            self.verify = True
+        else:
+            self.verify = False
+        if '-sas' in self.args:
+            self.skipping_large_entries = True
+            self.skipping_above_size_MB = float(self.args[(self.args.index('-sas')+1)])
+            self.skipping_above_size_B = self.skipping_above_size_MB * 1000000
+        elif '--skip-above-size' in self.args:
+            self.skipping_large_entries = True
+            self.skipping_above_size_MB = float(self.args[(self.args.index('--skip-above-size')+1)])
+            self.skipping_above_size_B = self.skipping_above_size_MB * 1000000
+        else:
+            self.skipping_above_size = False
         self.data = data["game"]
-        self.name = itchiodl.utils.clean_path(self.data["title"])
-        self.publisher = self.data.get("user").get("display_name")
-        if not self.publisher:
+        if self.verbose:
+            self.name = itchiodl.utils.clean_path(self.data["title"])
+            self.publisher = self.data.get("user").get("display_name")
+            if not self.publisher:
+                self.publisher = self.data.get("user").get("username")
+        else:
+            self.name = self.data["title"]
             self.publisher = self.data.get("user").get("username")
+
         self.link = self.data["url"]
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
         self.publisher_slug = itchiodl.utils.clean_path(self.publisher)
 
-        #if "VerboseFolders" in globals():
-        #    self.destination_folder = self.game_slug if not VerboseFolders else self.name
-        #else:
-        #    self.destination_folder = self.game_slug
-        #    print("VerboseFolders Not Detected in Global Variables, Falling Back to Game Slug\n")
         self.destination_path = os.path.normpath(f"{self.publisher_slug}/{self.name}")
 
         self.files = []
@@ -50,7 +70,13 @@ class Game:
             )
         j = r.json()
         for d in j["uploads"]:
-            self.downloads.append(d)
+            print(d["size"])
+            if d["size"] <= self.skipping_above_size_B and self.skipping_large_entries:
+                self.downloads.append(d)
+            elif not self.skipping_above_size:
+                self.downloads.append(d)
+            else:
+                print("!Skipping Large Item!")
 
     def download(self, token, platform):
         """Download a singular file"""
@@ -182,10 +208,10 @@ class Game:
             return
 
         # Verify
-        #if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-        #    print(f"Failed to verify {file}")
-        #    return
-
-        # Create checksum file
-        #with open(f"{path}/{file}.md5", "w") as f:
-        #    f.write(d["md5_hash"])
+        if self.verify:
+            if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+                print(f"Failed to verify {file}")
+                return
+            # Create checksum file
+            with open(f"{path}/{file}.md5", "w") as f:
+                f.write(d["md5_hash"])
