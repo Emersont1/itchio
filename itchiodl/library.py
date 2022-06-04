@@ -72,6 +72,8 @@ class Library:
             )
             k = json.loads(gsp.text)
             self.games.append(Game(k))
+            self.games[-1].id = False
+            self.games[-1].game_id = k["id"]
 
     def download_library(self, platform=None):
         """Download all games in the library"""
