@@ -57,6 +57,8 @@ class Library:
         )
         k = json.loads(gsp.text)
         self.games.append(Game(k))
+        self.games[-1].id = False
+        self.games[-1].game_id = j["id"]
 
     def load_games(self, publisher):
         """Load all games by publisher"""

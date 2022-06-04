@@ -171,7 +171,6 @@ class Game:
                 + f"download?api_key={token}&download_key_id={self.id}&uuid={j['uuid']}"
             )
         else:
-            print("!! NO DOWNLOAD KEY !!")
             url = (
                 f"https://api.itch.io/uploads/{d['id']}/"
                 + f"download?api_key={token}&uuid={j['uuid']}"

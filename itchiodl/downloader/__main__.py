@@ -87,10 +87,12 @@ def main():
                 lib.games = [game]
                 break
         if len(lib) > 1:
-            print("Game Is Not In Library, terminating")
-            return -1
-#        matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
-#        lib.load_game(matches.group(1), matches.group(2))
+            print("Game Is Not In Library, Checking for Free Downloads")
+            lib.games = []
+            matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
+            lib.load_game(matches.group(1), matches.group(2))
+
+
     else:
         lib.load_owned_games()
 
