@@ -70,12 +70,15 @@ class Game:
             )
         j = r.json()
         for d in j["uploads"]:
-            if not self.skipping_above_size:
-                self.downloads.append(d)
-            elif d["size"] <= self.skipping_above_size_B and self.skipping_large_entries:
-                self.downloads.append(d)
-            else:
-                print("!Skipping Large Item!")
+            try:
+                if not self.skipping_large_entries:
+                    self.downloads.append(d)
+                elif self.skipping_above_size_B > d.get("size"):
+                    self.downloads.append(d)
+                else:
+                    print("!Skipping Large Item!")
+            except:
+                print("There was an Error")
 
     def download(self, token, platform):
         """Download a singular file"""
