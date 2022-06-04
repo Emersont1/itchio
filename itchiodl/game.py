@@ -121,8 +121,8 @@ class Game:
 
         if os.path.exists(f"{path}/{file}"):
             print(f"File Already Exists! {file}")
-            if os.path.exists(f"{path}/{file}.md5"):
-                if self.verify:
+            if self.verify:
+                if os.path.exists(f"{path}/{file}.md5"):
                     with open(f"{path}/{file}.md5", "r") as f:
                         md5 = f.read().strip()
 
@@ -131,8 +131,7 @@ class Game:
                             return
                         print(f"MD5 Mismatch! {file}")
 
-            else:
-                if self.verify:
+                else:
                     md5 = itchiodl.utils.md5sum(f"{path}/{file}")
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {file}")
@@ -147,13 +146,16 @@ class Game:
                         os.remove(f"{path}/{file}")
                         return
 
-            if not os.path.exists(f"{path}/old"):
-                os.mkdir(f"{path}/old")
+                if not os.path.exists(f"{path}/old"):
+                    os.mkdir(f"{path}/old")
 
-            print(f"Moving {file} to old/")
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            print(timestamp)
-            shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
+                print(f"Moving {file} to old/")
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+                print(timestamp)
+                shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
+            else:
+                print(f"Skipping {self.name} - {file}")
+                return
 
         # Get UUID
         r = requests.post(
