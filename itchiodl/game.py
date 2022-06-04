@@ -20,7 +20,7 @@ class Game:
             self.verbose = True
         else:
             self.verbose = False
-        if '-v' or '--verify' in self.args:
+        if '--verify' in self.args:
             self.verify = True
         else:
             self.verify = False
@@ -70,10 +70,9 @@ class Game:
             )
         j = r.json()
         for d in j["uploads"]:
-            print(d["size"])
-            if d["size"] <= self.skipping_above_size_B and self.skipping_large_entries:
+            if not self.skipping_above_size:
                 self.downloads.append(d)
-            elif not self.skipping_above_size:
+            elif d["size"] <= self.skipping_above_size_B and self.skipping_large_entries:
                 self.downloads.append(d)
             else:
                 print("!Skipping Large Item!")
@@ -120,28 +119,30 @@ class Game:
         if os.path.exists(f"{path}/{file}"):
             print(f"File Already Exists! {file}")
             if os.path.exists(f"{path}/{file}.md5"):
+                if self.verify:
+                    with open(f"{path}/{file}.md5", "r") as f:
+                        md5 = f.read().strip()
 
-                with open(f"{path}/{file}.md5", "r") as f:
-                    md5 = f.read().strip()
+                        if md5 == d["md5_hash"]:
+                            print(f"Skipping {self.name} - {file}")
+                            return
+                        print(f"MD5 Mismatch! {file}")
 
+            else:
+                if self.verify:
+                    md5 = itchiodl.utils.md5sum(f"{path}/{file}")
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {file}")
-                        return
-                    print(f"MD5 Mismatch! {file}")
-            else:
-                md5 = itchiodl.utils.md5sum(f"{path}/{file}")
-                if md5 == d["md5_hash"]:
-                    print(f"Skipping {self.name} - {file}")
 
-                    # Create checksum file
-                    with open(f"{path}/{file}.md5", "w") as f:
-                        f.write(d["md5_hash"])
-                    return
-                # Old Download or corrupted file?
-                corrupted = False
-                if corrupted:
-                    os.remove(f"{path}/{file}")
-                    return
+                        # Create checksum file
+                        with open(f"{path}/{file}.md5", "w") as f:
+                            f.write(d["md5_hash"])
+                        return
+                    # Old Download or corrupted file?
+                    corrupted = False
+                    if corrupted:
+                        os.remove(f"{path}/{file}")
+                        return
 
             if not os.path.exists(f"{path}/old"):
                 os.mkdir(f"{path}/old")

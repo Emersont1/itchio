@@ -15,6 +15,9 @@ class Library:
         self.games = []
         self.jobs = jobs
 
+    def __len__(self):
+        return len(self.games)
+
     def load_game_page(self, page):
         """Load a page of games via the API"""
         print("Loading page", page)

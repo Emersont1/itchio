@@ -29,7 +29,6 @@ def main():
     )
 
     parser.add_argument(
-        "-v",
         "--verify",
         type=bool,
         default=False,
@@ -82,8 +81,16 @@ def main():
     if args.download_publisher:
         lib.load_games(args.download_publisher)
     elif args.download_game:
-        matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
-        lib.load_game(matches.group(1), matches.group(2))
+        lib.load_owned_games()
+        for game in lib.games:
+            if game.link == args.download_game:
+                lib.games = [game]
+                break
+        if len(lib) > 1:
+            print("Game Is Not In Library, terminating")
+            return -1
+#        matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
+#        lib.load_game(matches.group(1), matches.group(2))
     else:
         lib.load_owned_games()
 
