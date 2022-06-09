@@ -53,7 +53,7 @@ itch-download --download-publisher
 itch-download --download-game
 
 # For the --download-game argument, skips the check to see if the title is currently owned
-# In practice this free files only
+# In practice this downloads free files only
 itch-download --skip-library-load
 ```
 
