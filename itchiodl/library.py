@@ -83,10 +83,20 @@ class Library:
             lock = threading.RLock()
 
             def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
-                print(f"Downloaded {g.name} ({i[0]} of {l})")
-                return x
+                try:
+                    x = g.download(self.login, platform)
+                except:
+                    with lock:
+                        with open("errors.txt", "a") as f:
+                            f.write(
+                                f""" Cannot download game/asset: {g.name}
+                                This game/asset has been skipped please download manually
+                                ---------------------------------------------------------\n """
+                            )
+                finally:
+                    with lock:
+                        i[0] += 1
+                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    return x
 
             executor.map(functools.partial(dl, i), self.games)
