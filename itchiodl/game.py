@@ -80,9 +80,11 @@ class Game:
                 headers={"Authorization": token},
             )
         j = r.json()
+        if j.get("uploads") is None:
+            j.update({"uploads": []})
         for d in j.get("uploads"):
             if d.get("size") is None:
-                d.update("size", 0)
+                d.update({"size": 0})
             if not self.skipping_large_entries:
                 self.downloads.append(d)
             elif self.skipping_above_size_B > d.get("size"):
@@ -225,7 +227,9 @@ class Game:
 
         # Verify
         if self.verify:
-            if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+            if itchiodl.utils.md5sum(f"{path}/{file}") != d.get("md5_hash"):
+                if d.get("md5_hash") is None:
+                    return
                 print(f"Failed to verify {file}")
                 return
                 # Create checksum file
