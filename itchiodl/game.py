@@ -80,7 +80,9 @@ class Game:
                 headers={"Authorization": token},
             )
         j = r.json()
-        for d in j["uploads"]:
+        for d in j.get("uploads"):
+            if d.get("size") is None:
+                d.update("size", 0)
             if not self.skipping_large_entries:
                 self.downloads.append(d)
             elif self.skipping_above_size_B > d.get("size"):
@@ -132,18 +134,24 @@ class Game:
                 if os.path.exists(f"{path}/{file}.md5"):
                     with open(f"{path}/{file}.md5", "r") as f:
                         md5 = f.read().strip()
-                        if md5 == d["md5_hash"]:
+                        if md5 == d.get("md5_hash"):
                             print(f"MD5 Hash Matches {self.name} - `{file}`, Skipping")
+                            return
+                        elif d.get("md5_hash") is None:
+                            print("No MD5 Hash Supplied by Itch, assuming file is fine")
                             return
                         print(f"MD5 Mismatch! {file}")
                 else:
                     md5 = itchiodl.utils.md5sum(f"{path}/{file}")
-                    if md5 == d["md5_hash"]:
+                    if md5 == d.get("md5_hash"):
                         print(f"MD5 Matches {self.name} - `{file}`, Skipping")
                         # Create checksum file
                         if self.verify_file:
                             with open(f"{path}/{file}.md5", "w") as f:
                                 f.write(d["md5_hash"])
+                        return
+                    elif d.get("md5_hash") is None:
+                        print("No MD5 Hash Supplied by Itch, assuming file is fine")
                         return
                     # Old Download or corrupted file?
                     corrupted = False
