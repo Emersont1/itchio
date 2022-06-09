@@ -158,6 +158,7 @@ class Game:
                     shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
             else:
                 print(f"File Already Exists! Skipping")
+                return
 
         # Get UUID
         r = requests.post(
