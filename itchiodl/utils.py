@@ -1,8 +1,6 @@
 import re
-import sys
 import hashlib
 import requests
-import os
 
 
 class NoDownloadError(Exception):

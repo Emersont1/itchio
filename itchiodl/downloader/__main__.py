@@ -29,12 +29,21 @@ def main():
     )
 
     parser.add_argument(
-        "--verify",
+        "--no-verify",
         type=bool,
         default=False,
         const=True,
         nargs='?',
-        help="Verifies each file downloaded and produces a supplementary checksum file"
+        help="Disables file verification entirely, files with the same name are assumed to be the same file"
+    )
+
+    parser.add_argument(
+        "--no-verify-file",
+        type=bool,
+        default=False,
+        const=True,
+        nargs='?',
+        help="Disables writing md5 hashes to a supplementary file, does nothing if --no-verify is specified"
     )
 
     parser.add_argument(
@@ -62,7 +71,16 @@ def main():
     parser.add_argument(
         "--download-game",
         type=str,
-        help="Download a specific game, should be in the format publisher.itch.io/game",
+        help="Download a specific game, should be in the format 'https://%publisher%.itch.io/%game-title%'",
+    )
+
+    parser.add_argument(
+        "--skip-library-load",
+        type=bool,
+        default=False,
+        const=True,
+        nargs='?',
+        help="For the --download-game argument only, skips caching and checking the user library for an existing key"
     )
 
     args = parser.parse_args()
@@ -81,18 +99,20 @@ def main():
     if args.download_publisher:
         lib.load_games(args.download_publisher)
     elif args.download_game:
-        lib.load_owned_games()
-        for game in lib.games:
-            if game.link == args.download_game:
-                lib.games = [game]
-                break
-        if len(lib) > 1:
-            print("Game Is Not In Library, Checking for Free Downloads")
-            lib.games = []
+        if not args.skip_library_load:
+            lib.load_owned_games()
+            for game in lib.games:
+                if game.link == args.download_game:
+                    lib.games = [game]
+                    break
+            if len(lib) > 1:
+                print("Game Is Not In Library, Checking for Free Downloads")
+                lib.games = []
+                matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
+                lib.load_game(matches.group(1), matches.group(2))
+        else:
             matches = re.match(r"https://(.+)\.itch\.io/(.+)", args.download_game)
             lib.load_game(matches.group(1), matches.group(2))
-
-
     else:
         lib.load_owned_games()
 
