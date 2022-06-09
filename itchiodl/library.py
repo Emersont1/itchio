@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
 import requests
+import traceback
 from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
@@ -89,9 +90,11 @@ class Library:
                     with lock:
                         with open("errors.txt", "a") as f:
                             f.write(
-                                f""" Cannot download game/asset: {g.name}
-                                This game/asset has been skipped please download manually
-                                ---------------------------------------------------------\n """
+                                f""" An error occurred while downloading: {g.name}\n """
+                            )
+                            traceback.print_exc(file=f)
+                            f.write(
+                                f""" -----------------------------------------------\n  """
                             )
                 finally:
                     with lock:
