@@ -42,7 +42,7 @@ class Game:
             self.skipping_above_size_MB = float(self.args[(self.args.index('--skip-above-size')+1)])
             self.skipping_above_size_B = abs(self.skipping_above_size_MB * 1000000)
         else:
-            self.skipping_above_size = False
+            self.skipping_large_entries = False
 
         self.data = data["game"]
 
