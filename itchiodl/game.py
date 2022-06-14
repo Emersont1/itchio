@@ -57,7 +57,7 @@ class Game:
                 self.publisher = self.data.get("user").get("username")
         else:
             self.name = self.game_slug
-            self.publisher = self.data.get("user").get("username")
+            self.publisher = matches.group(1)
 
         self.publisher_slug = itchiodl.utils.clean_path(self.publisher)
 
