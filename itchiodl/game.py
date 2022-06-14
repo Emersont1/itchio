@@ -18,7 +18,7 @@ class Game:
         self.id = False
         self.game_id = None
         self.args = sys.argv[1:]
-        if '-vf' or '--verbose-folders' in self.args:
+        if '-vf' in self.args or '--verbose-folders' in self.args:
             self.verbose = True
         else:
             self.verbose = False
@@ -46,19 +46,19 @@ class Game:
 
         self.data = data["game"]
 
+        self.link = self.data["url"]
+        matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
+        self.game_slug = matches.group(2)
+
         if self.verbose:
             self.name = itchiodl.utils.clean_path(self.data["title"])
             self.publisher = self.data.get("user").get("display_name")
             if not self.publisher:
                 self.publisher = self.data.get("user").get("username")
         else:
-            self.name = self.data["title"]
+            self.name = self.game_slug
             self.publisher = self.data.get("user").get("username")
 
-        self.link = self.data["url"]
-
-        matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
-        self.game_slug = matches.group(2)
         self.publisher_slug = itchiodl.utils.clean_path(self.publisher)
 
         self.destination_path = os.path.normpath(f"{self.publisher_slug}/{self.name}")
