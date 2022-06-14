@@ -1,8 +1,7 @@
 import re
-import sys
 import hashlib
 import requests
-
+import os.path
 
 class NoDownloadError(Exception):
     """No download found exception"""
@@ -23,26 +22,26 @@ def download(url, path, name, file):
 
     cd = rsp.headers.get("Content-Disposition")
 
-    filename_re = re.search(r'filename="(.+)"', cd)
-    if filename_re is None:
-        filename = file
-    else:
-        filename = filename_re.group(1)
+    #filename_re = re.search(r'filename="(.+)"', cd)
+    #if filename_re is None:
+    #    filename = file
+    #else:
+    #    filename = filename_re.group(1)
 
-    with open(f"{path}/{filename}", "wb") as f:
+    with open(f"{path}/{file}", "wb") as f:
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
-    print(f"Downloaded {filename}")
-    return f"{path}/{filename}", True
+    print(f"Downloaded {file}")
+    return f"{path}/{file}", True
 
 
 def clean_path(path):
     """Cleans a path on windows"""
-    if sys.platform in ["win32", "cygwin", "msys"]:
-        path_clean = re.replace(r"[\<\>\:\"\/\\\|\?\*]", "-", path)
-        return path_clean
-    return path
+    path_clean = re.sub(r'[<>:"/\\|?*]', "-", path)
+    # This checks for strings that end in ... or similar, weird corner case that affects fewer than 0.1% of titles
+    path_clean = re.sub(r'(.)[.]\1+$', "-", path_clean)
+    return path_clean
 
 
 def md5sum(path):

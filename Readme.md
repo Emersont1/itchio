@@ -25,11 +25,36 @@ python -m itchiodl.downloader --api-key=KEYHERE --jobs=4
 # via setup-tools entry point
 itch-download -k KEYHERE
 
-# download with multiple threads
+# download with multiple threads, default is 4 if unspecified
 itch-download -k KEYHERE -j 4
 
 # only download osx or cross platform downloads
 itch-download -p osx
+
+# folder structure uses display names for users/publishers and game titles
+itch-download -vf
+
+# skips downloads above a certain size in megabytes, supports decimals
+itch-download -sas 50.0
+
+# Disables file verification entirely, files with the same name are assumed to be the same file
+itch-download --no-verify
+
+# Disables writing supplementary .md5 files, existing files will still be hashed against their download hashes
+# Does nothing if --no-verify is specified
+itch-download --no-verify-file
+
+# Downloads all free titles from the specified publisher
+# Argument should be formatted 'https://{publisher}.itch.io'
+itch-download --download-publisher
+
+# Checks if title is owned, then downloads all files for it
+# Argument should be formatted 'https://{publisher}.itch.io/{title}/'
+itch-download --download-game
+
+# For the --download-game argument, skips the check to see if the title is currently owned
+# In practice this downloads free files only
+itch-download --skip-library-load
 ```
 
 ## Add All Games in a bundle to your library

@@ -3,10 +3,10 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
 import requests
+import traceback
 from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
-
 
 class Library:
     """Representation of a user's game library"""
@@ -15,6 +15,9 @@ class Library:
         self.login = login
         self.games = []
         self.jobs = jobs
+
+    def __len__(self):
+        return len(self.games)
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
@@ -27,6 +30,8 @@ class Library:
 
         for s in j["owned_keys"]:
             self.games.append(Game(s))
+            self.games[-1].id = s["id"]
+            self.games[-1].game_id = s["game_id"]
 
         return len(j["owned_keys"])
 
@@ -53,6 +58,8 @@ class Library:
         )
         k = json.loads(gsp.text)
         self.games.append(Game(k))
+        self.games[-1].id = False
+        self.games[-1].game_id = j["id"]
 
     def load_games(self, publisher):
         """Load all games by publisher"""
@@ -66,6 +73,8 @@ class Library:
             )
             k = json.loads(gsp.text)
             self.games.append(Game(k))
+            self.games[-1].id = False
+            self.games[-1].game_id = k["id"]
 
     def download_library(self, platform=None):
         """Download all games in the library"""
@@ -75,10 +84,22 @@ class Library:
             lock = threading.RLock()
 
             def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
-                print(f"Downloaded {g.name} ({i[0]} of {l})")
-                return x
+                try:
+                    x = g.download(self.login, platform)
+                except:
+                    with lock:
+                        with open("errors.txt", "a") as f:
+                            f.write(
+                                f""" An error occurred while downloading: {g.name}\n """
+                            )
+                            traceback.print_exc(file=f)
+                            f.write(
+                                f""" -----------------------------------------------\n  """
+                            )
+                finally:
+                    with lock:
+                        i[0] += 1
+                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    return x
 
             executor.map(functools.partial(dl, i), self.games)

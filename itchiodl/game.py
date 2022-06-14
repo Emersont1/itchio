@@ -5,6 +5,7 @@ import urllib
 import datetime
 import shutil
 import requests
+import sys
 
 
 import itchiodl.utils
@@ -14,20 +15,53 @@ class Game:
     """Representation of a game download"""
 
     def __init__(self, data):
-        self.data = data["game"]
-        self.name = self.data["title"]
-        self.publisher = self.data["user"]["username"]
-        self.link = self.data["url"]
-        if "game_id" in self.data:
-            self.id = self.data["id"]
-            self.game_id = self.data["game_id"]
+        self.id = False
+        self.game_id = None
+        self.args = sys.argv[1:]
+        if '-vf' in self.args or '--verbose-folders' in self.args:
+            self.verbose = True
         else:
-            self.id = False
-            self.game_id = self.data["id"]
+            self.verbose = False
 
+        if '--no-verify-file' in self.args:
+            self.verify_file = False
+        else:
+            self.verify_file = True
+
+        if '--no-verify ' in self.args:
+            self.verify = False
+        else:
+            self.verify = True
+
+        if '-sas' in self.args:
+            self.skipping_large_entries = True
+            self.skipping_above_size_MB = float(self.args[(self.args.index('-sas')+1)])
+            self.skipping_above_size_B = abs(self.skipping_above_size_MB * 1000000)
+        elif '--skip-above-size' in self.args:
+            self.skipping_large_entries = True
+            self.skipping_above_size_MB = float(self.args[(self.args.index('--skip-above-size')+1)])
+            self.skipping_above_size_B = abs(self.skipping_above_size_MB * 1000000)
+        else:
+            self.skipping_large_entries = False
+
+        self.data = data["game"]
+
+        self.link = self.data["url"]
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
-        self.publisher_slug = matches.group(1)
+
+        if self.verbose:
+            self.name = itchiodl.utils.clean_path(self.data["title"])
+            self.publisher = self.data.get("user").get("display_name")
+            if not self.publisher:
+                self.publisher = self.data.get("user").get("username")
+        else:
+            self.name = self.game_slug
+            self.publisher = matches.group(1)
+
+        self.publisher_slug = itchiodl.utils.clean_path(self.publisher)
+
+        self.destination_path = os.path.normpath(f"{self.publisher_slug}/{self.name}")
 
         self.files = []
         self.downloads = []
@@ -46,24 +80,26 @@ class Game:
                 headers={"Authorization": token},
             )
         j = r.json()
-        for d in j["uploads"]:
-            self.downloads.append(d)
+        if j.get("uploads") is None:
+            j.update({"uploads": []})
+        for d in j.get("uploads"):
+            if d.get("size") is None:
+                d.update({"size": 0})
+            if not self.skipping_large_entries:
+                self.downloads.append(d)
+            elif self.skipping_above_size_B > d.get("size"):
+                self.downloads.append(d)
+            else:
+                print(f"Skipping Large Item: {d.get('filename')}")
 
     def download(self, token, platform):
         """Download a singular file"""
         print("Downloading", self.name)
 
-        # if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
-        #    print(f"Skipping Game {self.name}")
-        #    return
-
         self.load_downloads(token)
 
-        if not os.path.exists(self.publisher_slug):
-            os.mkdir(self.publisher_slug)
-
-        if not os.path.exists(f"{self.publisher_slug}/{self.game_slug}"):
-            os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
+        if not os.path.exists(self.destination_path):
+            os.makedirs(self.destination_path)
 
         for d in self.downloads:
             if (
@@ -75,13 +111,12 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
+        with open(f"{self.destination_path}.json", "w") as f:
             json.dump(
                 {
                     "name": self.name,
                     "publisher": self.publisher,
                     "link": self.link,
-                    "itch_id": self.id,
                     "game_id": self.game_id,
                     "itch_data": self.data,
                 },
@@ -91,44 +126,49 @@ class Game:
 
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
-        print(f"Downloading {d['filename']}")
+        print(f"Downloading `{d['filename']}`")
 
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
-        path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
-
+        path = self.destination_path
         if os.path.exists(f"{path}/{file}"):
-            print(f"File Already Exists! {file}")
-            if os.path.exists(f"{path}/{file}.md5"):
-
-                with open(f"{path}/{file}.md5", "r") as f:
-                    md5 = f.read().strip()
-
-                    if md5 == d["md5_hash"]:
-                        print(f"Skipping {self.name} - {file}")
+            if self.verify:
+                print(f"! `{file}` Already Exists!")
+                if os.path.exists(f"{path}/{file}.md5"):
+                    with open(f"{path}/{file}.md5", "r") as f:
+                        md5 = f.read().strip()
+                        if md5 == d.get("md5_hash"):
+                            print(f"MD5 Hash Matches {self.name} - `{file}`, Skipping")
+                            return
+                        elif d.get("md5_hash") is None:
+                            print("No MD5 Hash Supplied by Itch, assuming file is fine")
+                            return
+                        print(f"MD5 Mismatch! {file}")
+                else:
+                    md5 = itchiodl.utils.md5sum(f"{path}/{file}")
+                    if md5 == d.get("md5_hash"):
+                        print(f"MD5 Matches {self.name} - `{file}`, Skipping")
+                        # Create checksum file
+                        if self.verify_file:
+                            with open(f"{path}/{file}.md5", "w") as f:
+                                f.write(d["md5_hash"])
                         return
-                    print(f"MD5 Mismatch! {file}")
+                    elif d.get("md5_hash") is None:
+                        print("No MD5 Hash Supplied by Itch, assuming file is fine")
+                        return
+                    # Old Download or corrupted file?
+                    corrupted = False
+                    if corrupted:
+                        os.remove(f"{path}/{file}")
+                        return
+                    if not os.path.exists(f"{path}/old"):
+                        os.mkdir(f"{path}/old")
+                    print(f"Moving {file} to old/")
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+                    print(timestamp)
+                    shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
             else:
-                md5 = itchiodl.utils.md5sum(f"{path}/{file}")
-                if md5 == d["md5_hash"]:
-                    print(f"Skipping {self.name} - {file}")
-
-                    # Create checksum file
-                    with open(f"{path}/{file}.md5", "w") as f:
-                        f.write(d["md5_hash"])
-                    return
-                # Old Download or corrupted file?
-                corrupted = False
-                if corrupted:
-                    os.remove(f"{path}/{file}")
-                    return
-
-            if not os.path.exists(f"{path}/old"):
-                os.mkdir(f"{path}/old")
-
-            print(f"Moving {file} to old/")
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            print(timestamp)
-            shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
+                print(f"File Already Exists! Skipping")
+                return
 
         # Get UUID
         r = requests.post(
@@ -186,10 +226,13 @@ class Game:
             return
 
         # Verify
-        if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-            print(f"Failed to verify {file}")
-            return
-
-        # Create checksum file
-        with open(f"{path}/{file}.md5", "w") as f:
-            f.write(d["md5_hash"])
+        if self.verify:
+            if itchiodl.utils.md5sum(f"{path}/{file}") != d.get("md5_hash"):
+                if d.get("md5_hash") is None:
+                    return
+                print(f"Failed to verify {file}")
+                return
+                # Create checksum file
+            if self.verify_file:
+                with open(f"{path}/{file}.md5", "w") as f:
+                    f.write(d["md5_hash"])
