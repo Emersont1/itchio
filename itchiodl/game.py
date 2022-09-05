@@ -18,9 +18,9 @@ class Game:
         self.name = self.data["title"]
         self.publisher = self.data["user"]["username"]
         self.link = self.data["url"]
-        if "game_id" in self.data:
-            self.id = self.data["id"]
-            self.game_id = self.data["game_id"]
+        if "game_id" in data:
+            self.id = data["id"]
+            self.game_id = data["game_id"]
         else:
             self.id = False
             self.game_id = self.data["id"]
