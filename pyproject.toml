@@ -8,7 +8,7 @@ readme = "Readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "beautifulsoup4"
+requests = " ^2.28.1"
 beautifulsoup4 = "^4.10.0"
 clint = "^0.5.1"
 
