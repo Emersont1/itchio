@@ -3,4 +3,4 @@ jobs=4
 extension-pkg-allow-list=lxml
 
 [MESSAGES CONTROL]
-disable=invalid-name,unspecified-encoding,missing-module-docstring,too-many-instance-attributes
+disable=invalid-name,unspecified-encoding,missing-module-docstring,too-many-instance-attributes,missing-timeout
