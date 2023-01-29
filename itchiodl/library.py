@@ -48,11 +48,27 @@ class Library:
         j = json.loads(rsp.text)
         game_id = j["id"]
         gsp = requests.get(
-            f"https://api.itch.io/games/{game_id}",
+            f"https://api.itch.io/games/{game_id}/uploads",
             headers={"Authorization": self.login},
         )
-        k = json.loads(gsp.text)
-        self.games.append(Game(k))
+        k = gsp.json()
+        if k != {"uploads": {}}:
+            self.games.append(Game(k))
+            return
+        print(f"{title} is a purchased game.")
+        i = 1
+        while self.games == []:
+            self.games = [
+                x
+                for x in self.games
+                if x.link == f"https://{publisher}.itch.io/{title}"
+            ]
+            if self.load_game_page(i) == 0:
+                break
+            i += 1
+
+        if self.games == []:
+            print(f"Cannot find {title} in owned keys, you may not own it.")
 
     def load_games(self, publisher):
         """Load all games by publisher"""
