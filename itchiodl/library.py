@@ -58,12 +58,15 @@ class Library:
         print(f"{title} is a purchased game.")
         i = 1
         while self.games == []:
+            j = self.load_game_page(i)
+
             self.games = [
                 x
                 for x in self.games
                 if x.link == f"https://{publisher}.itch.io/{title}"
             ]
-            if self.load_game_page(i) == 0:
+
+            if j == 0:
                 break
             i += 1
 
