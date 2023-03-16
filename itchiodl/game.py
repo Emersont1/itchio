@@ -1,3 +1,4 @@
+import copy
 import re
 import json
 import os
@@ -7,7 +8,7 @@ import shutil
 import requests
 
 
-import itchiodl.utils
+from itchiodl.utils import clean_path, md5sum, download, NoDownloadError
 
 
 class Game:
@@ -31,6 +32,8 @@ class Game:
 
         self.files = []
         self.downloads = []
+        self.path = os.path.abspath(
+            f"{clean_path(self.publisher_slug)}/{clean_path(self.game_slug)}")
 
     def load_downloads(self, token):
         """Load all downloads for this game"""
@@ -45,9 +48,9 @@ class Game:
                 f"https://api.itch.io/games/{self.game_id}/uploads",
                 headers={"Authorization": token},
             )
+        r.raise_for_status()
         j = r.json()
-        for d in j["uploads"]:
-            self.downloads.append(d)
+        self.downloads = copy.copy(j["uploads"])
 
     def download(self, token, platform):
         """Download a singular file"""
@@ -59,11 +62,7 @@ class Game:
 
         self.load_downloads(token)
 
-        if not os.path.exists(self.publisher_slug):
-            os.mkdir(self.publisher_slug)
-
-        if not os.path.exists(f"{self.publisher_slug}/{self.game_slug}"):
-            os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
+        os.makedirs(self.path, exist_ok=True)
 
         for d in self.downloads:
             if (
@@ -75,7 +74,7 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
+        with open("{self.path}.json", "w") as f:
             json.dump(
                 {
                     "name": self.name,
@@ -93,14 +92,13 @@ class Game:
         """Download a single file, checking for existing files"""
         print(f"Downloading {d['filename']}")
 
-        file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
-        path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
+        file = clean_path(d["filename"] or d["display_name"] or d["id"])
 
-        if os.path.exists(f"{path}/{file}"):
+        if os.path.exists(f"{self.path}/{file}"):
             print(f"File Already Exists! {file}")
-            if os.path.exists(f"{path}/{file}.md5"):
+            if os.path.exists(f"{self.path}/{file}.md5"):
 
-                with open(f"{path}/{file}.md5", "r") as f:
+                with open(f"{self.path}/{file}.md5", "r") as f:
                     md5 = f.read().strip()
 
                     if md5 == d["md5_hash"]:
@@ -108,27 +106,27 @@ class Game:
                         return
                     print(f"MD5 Mismatch! {file}")
             else:
-                md5 = itchiodl.utils.md5sum(f"{path}/{file}")
+                md5 = md5sum(f"{self.path}/{file}")
                 if md5 == d["md5_hash"]:
                     print(f"Skipping {self.name} - {file}")
 
                     # Create checksum file
-                    with open(f"{path}/{file}.md5", "w") as f:
+                    with open(f"{self.path}/{file}.md5", "w") as f:
                         f.write(d["md5_hash"])
                     return
                 # Old Download or corrupted file?
                 corrupted = False
                 if corrupted:
-                    os.remove(f"{path}/{file}")
+                    os.remove(f"{self.path}/{file}")
                     return
 
-            if not os.path.exists(f"{path}/old"):
-                os.mkdir(f"{path}/old")
+            if not os.path.exists(f"{self.path}/old"):
+                os.mkdir(f"{self.path}/old")
 
             print(f"Moving {file} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
             print(timestamp)
-            shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
+            shutil.move(f"{self.path}/{file}", f"{self.path}/old/{timestamp}-{file}")
 
         # Get UUID
         r = requests.post(
@@ -150,15 +148,15 @@ class Game:
             )
         # response_code = urllib.request.urlopen(url).getcode()
         try:
-            itchiodl.utils.download(url, path, self.name, file)
-        except itchiodl.utils.NoDownloadError:
+            actual_destination = download(url, self.path, self.name, file)
+        except NoDownloadError:
             print("Http response is not a download, skipping")
 
             with open("errors.txt", "a") as f:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {path}
+                    Path: {self.path}
                     File: {file}
                     Request URL: {url}
                     This request failed due to a missing response header
@@ -174,7 +172,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {path}
+                    Path: {self.path}
                     File: {file}
                     Request URL: {url}
                     Request Response Code: {e.code}
@@ -186,10 +184,10 @@ class Game:
             return
 
         # Verify
-        if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-            print(f"Failed to verify {file}")
+        if md5sum(actual_destination) != d["md5_hash"]:
+            print(f"Failed to verify {file}{d}")
             return
 
         # Create checksum file
-        with open(f"{path}/{file}.md5", "w") as f:
+        with open(f"{actual_destination}.md5", "w") as f:
             f.write(d["md5_hash"])

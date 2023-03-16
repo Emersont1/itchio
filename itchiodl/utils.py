@@ -13,7 +13,12 @@ def download(url, path, name, file):
 
     desc = f"{name} - {file}"
     print(f"Downloading {desc}")
-    rsp = requests.get(url, stream=True)
+
+    try:
+        rsp = requests.get(url, stream=True)
+        rsp.raise_for_status()
+    except requests.HTTPError as e:
+        raise NoDownloadError("Http response is not a download, skipping") from e
 
     if (
         rsp.headers.get("content-length") is None
@@ -34,13 +39,13 @@ def download(url, path, name, file):
             f.write(chunk)
 
     print(f"Downloaded {filename}")
-    return f"{path}/{filename}", True
+    return f"{path}/{filename}"
 
 
 def clean_path(path):
     """Cleans a path on windows"""
     if sys.platform in ["win32", "cygwin", "msys"]:
-        path_clean = re.replace(r"[\<\>\:\"\/\\\|\?\*]", "-", path)
+        path_clean = re.sub(r"[<>:\"/\\|?*]", "-", path)
         return path_clean
     return path
 

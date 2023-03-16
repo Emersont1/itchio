@@ -32,15 +32,17 @@ def LoginWeb(user, password):
 
 def LoginAPI(user, password):
     """Login to itch.io using API"""
-    r = requests.post(
-        "https://api.itch.io/login",
-        {"username": user, "password": password, "source": "desktop"},
-    )
-    if r.status_code != 200:
-        print(f"Error: {r.status_code} is not 200")
+    try:
+        r = requests.post(
+            "https://api.itch.io/login",
+            {"username": user, "password": password, "source": "desktop"},
+        )
+        r.raise_for_status()
+    except requests.HTTPError as e:
+        print(f"Error: {e.response.status_code} is not 200")
         print(warning)
-        print(r.text)
-        raise RuntimeError
+        print(e.response.text)
+        raise
     t = json.loads(r.text)
 
     if not t["success"]:

@@ -1,4 +1,5 @@
 import json
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
@@ -94,10 +95,19 @@ class Library:
             lock = threading.RLock()
 
             def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
+                try:
+                    x = g.download(self.login, platform)
+                    with lock:
+                        i[0] += 1
+                except Exception as e:
+                    s = f"\nUnable to get '{g.name}' because of unexpected error: \n'{traceback.format_exc()}'\n\n"
+                    with open("errors.txt", "a", encoding='utf-8') as f:
+                        f.write(s)
+                    print(s)
+                    return
+
                 print(f"Downloaded {g.name} ({i[0]} of {l})")
                 return x
 
-            executor.map(functools.partial(dl, i), self.games)
+            for _ in executor.map(functools.partial(dl, i), self.games):
+                pass  # exhaust iterator to re-throw exceptions.
