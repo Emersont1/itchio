@@ -2,10 +2,10 @@ import re
 import json
 import urllib
 import datetime
-import requests
 from pathlib import Path
+import requests
 
-import itchiodl.utils as utils
+from itchiodl import utils
 
 
 class Game:
@@ -29,6 +29,11 @@ class Game:
 
         self.files = []
         self.downloads = []
+        self.dir = (
+            Path(".")
+            / utils.clean_path(self.publisher_slug)
+            / utils.clean_path(self.game_slug)
+        )
 
     def load_downloads(self, token):
         """Load all downloads for this game"""
@@ -57,12 +62,7 @@ class Game:
 
         self.load_downloads(token)
 
-        self.dir = (
-            Path(".")
-            / utils.clean_path(self.publisher_slug)
-            / utils.clean_path(self.game_slug)
-        )
-        self.dir.mkdir(parents= True, exist_ok=True)
+        self.dir.mkdir(parents=True, exist_ok=True)
 
         for d in self.downloads:
             if (
