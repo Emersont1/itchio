@@ -40,7 +40,7 @@ def download(url, path, name, file):
 def clean_path(path):
     """Cleans a path on windows"""
     if sys.platform in ["win32", "cygwin", "msys"]:
-        path_clean = re.replace(r"[\<\>\:\"\/\\\|\?\*]", "-", path)
+        path_clean = re.sub(r"[<>:|?*\"\/\\]", "-", path)
         return path_clean
     return path
 
@@ -48,7 +48,7 @@ def clean_path(path):
 def md5sum(path):
     """Returns the md5sum of a file"""
     md5 = hashlib.md5()
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             md5.update(chunk)
     return md5.hexdigest()

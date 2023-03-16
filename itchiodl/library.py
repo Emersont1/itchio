@@ -94,10 +94,13 @@ class Library:
             lock = threading.RLock()
 
             def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
-                print(f"Downloaded {g.name} ({i[0]} of {l})")
-                return x
+                try:
+                    x = g.download(self.login, platform)
+                    with lock:
+                        i[0] += 1
+                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    return x
+                except Exception as e:
+                    print(e)
 
             executor.map(functools.partial(dl, i), self.games)
