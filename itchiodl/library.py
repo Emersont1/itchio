@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from itchiodl.game import Game
+from itchiodl.utils import NoDownloadError
 
 
 class Library:
@@ -89,15 +90,21 @@ class Library:
     def download_library(self, platform=None):
         """Download all games in the library"""
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            i = [0]
+            i = [0, 0]
             l = len(self.games)
             lock = threading.RLock()
 
             def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
-                print(f"Downloaded {g.name} ({i[0]} of {l})")
-                return x
+                try:
+                    g.download(self.login, platform)
+                    with lock:
+                        i[0] += 1
+                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                except NoDownloadError as e:
+                    print(e)
+                    i[1] += 1
 
-            executor.map(functools.partial(dl, i), self.games)
+            r = executor.map(functools.partial(dl, i), self.games)
+            for _ in r:
+                pass
+            print(f"Downloaded {i[0]} Games, {i[1]} Errors")
