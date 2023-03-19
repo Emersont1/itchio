@@ -33,13 +33,12 @@ class Game:
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
         if self.humanFolders:
-            self.name = utils.clean_path(self.data["title"])
+            self.game_slug = utils.clean_path(self.data["title"])
             self.publisher_slug = self.data.get("user").get("display_name")
             # This Branch covers the case that the user has not set a display name, and defaults to their username
             if not self.publisher_slug:
                 self.publisher_slug = self.data.get("user").get("username")
         else:
-            self.name = self.game_slug
             self.publisher_slug = matches.group(1)
 
         self.files = []
