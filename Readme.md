@@ -30,6 +30,10 @@ itch-download -k KEYHERE -j 4
 
 # only download osx or cross platform downloads
 itch-download -p osx
+
+# folder structure uses display names for users/publishers and game titles
+itch-download --human-folders
+
 ```
 
 ## Add All Games in a bundle to your library
