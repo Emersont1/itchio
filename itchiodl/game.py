@@ -14,7 +14,7 @@ class Game:
 
     def __init__(self, data):
         self.args = argv[1:]
-        if '-h' in self.args or '--human-folders' in self.args:
+        if '--human-folders' in self.args:
             self.humanFolders = True
         else:
             self.humanFolders = False
