@@ -4,6 +4,7 @@ import urllib
 import datetime
 from pathlib import Path
 import requests
+from sys import argv
 
 from itchiodl import utils
 
@@ -12,6 +13,12 @@ class Game:
     """Representation of a game download"""
 
     def __init__(self, data):
+        self.args = argv[1:]
+        if '-h' in self.args or '--human-folders' in self.args:
+            self.humanFolders = True
+        else:
+            self.humanFolders = False
+
         self.data = data["game"]
         self.name = self.data["title"]
         self.publisher = self.data["user"]["username"]
@@ -25,7 +32,15 @@ class Game:
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
-        self.publisher_slug = matches.group(1)
+        if self.humanFolders:
+            self.name = utils.clean_path(self.data["title"])
+            self.publisher_slug = self.data.get("user").get("display_name")
+            # This Branch covers the case that the user has not set a display name, and defaults to their username
+            if not self.publisher_slug:
+                self.publisher_slug = self.data.get("user").get("username")
+        else:
+            self.name = self.game_slug
+            self.publisher_slug = matches.group(1)
 
         self.files = []
         self.downloads = []
