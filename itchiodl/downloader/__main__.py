@@ -19,7 +19,6 @@ def main():
     )
 
     parser.add_argument(
-        "-h",
         "--human-folders",
         type=bool,
         default=False,
