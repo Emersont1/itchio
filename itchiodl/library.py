@@ -4,7 +4,7 @@ import functools
 import threading
 import requests
 from bs4 import BeautifulSoup
-
+from os.path import exists
 from itchiodl.game import Game
 from itchiodl.utils import NoDownloadError
 
@@ -16,6 +16,7 @@ class Library:
         self.login = login
         self.games = []
         self.jobs = jobs
+        self.key_pairs = {}
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
@@ -40,8 +41,52 @@ class Library:
                 break
             page += 1
 
+    def load_game_page_keys(self, page):
+        """Load a page of game keys via the API"""
+        duplicates = 0
+        print("Loading page", page)
+        r = requests.get(
+            f"https://api.itch.io/profile/owned-keys?page={page}",
+            headers={"Authorization": self.login},
+        )
+        j = json.loads(r.text)
+
+        for s in j["owned_keys"]:
+            if str(s.get("game_id")) in self.key_pairs:
+                duplicates+=1
+                # The duplicate download key check assumes that a consecutive
+                # string of ten identical game ids indicates the list has not changed
+                # Duplicate game keys can happen if you buy multiple bundles containing the same item
+                # print("duplicate game ID", s["game_id"]) # Old debug line
+                if duplicates > 9 and exists("key_pairs.json"):
+                    print("Assuming that the owned keys have not changed")
+                    return 0
+            else:
+                self.key_pairs.update({str(s["game_id"]):s["id"]})
+                duplicates = 0
+
+        return len(j["owned_keys"])
+
+    def load_owned_keys(self):
+        """Load game_id:download_id pairs only and stores them in the library.keyPairs dictionary"""
+        page = 1
+        if exists("key_pairs.json"):
+            infile = open("key_pairs.json","r")
+            self.key_pairs.update(json.loads(infile.read()))
+            infile.close()
+        while True:
+            n = self.load_game_page_keys(page)
+            if n == 0:
+                break
+            page += 1
+
+        outfile = open("key_pairs.json", "w")
+        json.dump(self.key_pairs,outfile,indent=0)
+        outfile.close()
+
     def load_game(self, publisher, title):
         """Load a game by publisher and title"""
+        self.load_owned_keys()
         rsp = requests.get(
             f"https://{publisher}.itch.io/{title}/data.json",
             headers={"Authorization": self.login},
@@ -49,30 +94,14 @@ class Library:
         j = json.loads(rsp.text)
         game_id = j["id"]
         gsp = requests.get(
-            f"https://api.itch.io/games/{game_id}/uploads",
+            f"https://api.itch.io/games/{game_id}",
             headers={"Authorization": self.login},
         )
-        k = gsp.json()
-        if k != {"uploads": {}}:
-            self.games.append(Game(k))
-            return
-        print(f"{title} is a purchased game.")
-        i = 1
-        while self.games == []:
-            j = self.load_game_page(i)
-
-            self.games = [
-                x
-                for x in self.games
-                if x.link == f"https://{publisher}.itch.io/{title}"
-            ]
-
-            if j == 0:
-                break
-            i += 1
-
-        if self.games == []:
-            print(f"Cannot find {title} in owned keys, you may not own it.")
+        k = json.loads(gsp.text)
+        game = Game(k)
+        game.id = self.key_pairs.get(str(game_id), False)
+        game.game_id = game_id
+        self.games.append(game)
 
     def load_games(self, publisher):
         """Load all games by publisher"""

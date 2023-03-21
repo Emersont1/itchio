@@ -63,7 +63,10 @@ class Game:
                 headers={"Authorization": token},
             )
         j = r.json()
-        for d in j["uploads"]:
+        # This converts a null j.uploads into an empty dictionary and uses the safer .get accessor
+        if j.get("uploads") is None:
+            j.update({"uploads": []})
+        for d in j.get("uploads"):
             self.downloads.append(d)
 
     def download(self, token, platform):
