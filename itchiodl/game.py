@@ -1,10 +1,9 @@
-import os
 import re
 import json
 import urllib
 import datetime
 from os import path
-from pathlib import Path
+from os import mkdir
 import requests
 from sys import argv
 
@@ -137,7 +136,7 @@ class Game:
                     return
 
             old_dir = f"{pathname}/old"
-            os.mkdir(old_dir)
+            mkdir(old_dir)
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
