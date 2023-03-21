@@ -4,6 +4,7 @@ import urllib
 import datetime
 from os import path
 from os import mkdir
+from os import makedirs
 import requests
 from sys import argv
 
@@ -78,8 +79,8 @@ class Game:
 
         self.load_downloads(token)
 
-        if not os.path.exists(self.destination_path):
-            os.makedirs(self.destination_path)
+        if not path.exists(self.destination_path):
+            makedirs(self.destination_path)
 
         for d in self.downloads:
             if (
