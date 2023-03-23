@@ -19,6 +19,15 @@ def main():
     )
 
     parser.add_argument(
+        "--human-folders",
+        type=bool,
+        default=False,
+        const=True,
+        nargs='?',
+        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title"
+    )
+
+    parser.add_argument(
         "-j",
         "--jobs",
         type=int,
