@@ -41,8 +41,9 @@ def clean_path(path):
     """Cleans a path on windows"""
     if sys.platform in ["win32", "cygwin", "msys"]:
         path_clean = re.sub(r"[<>:|?*\"\/\\]", "-", path)
-        # This checks for strings that end in ... or similar, weird corner case that affects fewer than 0.1% of titles
-        path_clean = re.sub(r'(.)[.]\1+$', "-", path_clean)
+        # This checks for strings that end in ... or similar,
+        # weird corner case that affects fewer than 0.1% of titles
+        path_clean = re.sub(r"(.)[.]\1+$", "-", path_clean)
         return path_clean
     return path
 

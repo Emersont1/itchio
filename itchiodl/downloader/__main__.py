@@ -23,8 +23,8 @@ def main():
         type=bool,
         default=False,
         const=True,
-        nargs='?',
-        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title"
+        nargs="?",
+        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title",
     )
 
     parser.add_argument(
