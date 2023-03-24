@@ -2,9 +2,11 @@ import re
 import json
 import urllib
 import datetime
-from pathlib import Path
-from sys import argv
+from os import path
+from os import mkdir
+from os import makedirs
 import requests
+from sys import argv
 
 from itchiodl import utils
 
@@ -14,7 +16,7 @@ class Game:
 
     def __init__(self, data):
         self.args = argv[1:]
-        if "--human-folders" in self.args:
+        if '--human-folders' in self.args:
             self.humanFolders = True
         else:
             self.humanFolders = False
@@ -35,20 +37,20 @@ class Game:
         if self.humanFolders:
             self.game_slug = utils.clean_path(self.data["title"])
             self.publisher_slug = self.data.get("user").get("display_name")
-            # This Branch covers the case that the user has
-            # not set a display name, and defaults to their username
+            # This Branch covers the case that the user has not set a display name, and defaults to their username
             if not self.publisher_slug:
                 self.publisher_slug = self.data.get("user").get("username")
         else:
             self.publisher_slug = matches.group(1)
 
+        self.destination_path = path.normpath(f"{self.publisher_slug}/{self.game_slug}")
         self.files = []
         self.downloads = []
-        self.dir = (
-            Path(".")
-            / utils.clean_path(self.publisher_slug)
-            / utils.clean_path(self.game_slug)
-        )
+        #self.dir = (
+        #    Path(".")
+        #    / utils.clean_path(self.publisher_slug)
+        #    / utils.clean_path(self.game_slug)
+        #)
 
     def load_downloads(self, token):
         """Load all downloads for this game"""
@@ -77,7 +79,8 @@ class Game:
 
         self.load_downloads(token)
 
-        self.dir.mkdir(parents=True, exist_ok=True)
+        if not path.exists(self.destination_path):
+            makedirs(self.destination_path)
 
         for d in self.downloads:
             if (
@@ -89,7 +92,7 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with self.dir.with_suffix(".json").open("w") as f:
+        with open(f"{self.destination_path}.json", "w") as f:
             json.dump(
                 {
                     "name": self.name,
@@ -107,41 +110,38 @@ class Game:
         """Download a single file, checking for existing files"""
         print(f"Downloading {d['filename']}")
 
-        filename = d["filename"] or d["display_name"] or d["id"]
-
-        out_file = self.dir / filename
-
-        if out_file.exists():
+        filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
+        pathname = self.destination_path
+        if path.exists(f"{pathname}/{filename}"):
             print(f"File Already Exists! {filename}")
-            md5_file = out_file.with_suffix(".md5")
-            if md5_file.exists():
-                with md5_file.open("r") as f:
+            if path.exists(f"{pathname}/{filename}.md5"):
+                with open(f"{pathname}/{filename}.md5", "r") as f:
                     md5 = f.read().strip()
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {filename}")
                         return
                     print(f"MD5 Mismatch! {filename}")
             else:
-                md5 = utils.md5sum(str(out_file))
+                md5 = utils.md5sum(f"{pathname}/{filename}")
                 if md5 == d["md5_hash"]:
                     print(f"Skipping {self.name} - {filename}")
 
                     # Create checksum file
-                    with md5_file.open("w") as f:
+                    with open(f"{pathname}/{filename}.md5", "w") as f:
                         f.write(d["md5_hash"])
                     return
                 # Old Download or corrupted file?
                 corrupted = False
                 if corrupted:
-                    out_file.remove()
+                    filename.remove()
                     return
 
-            old_dir = self.dir / "old"
-            old_dir.mkdir(exist_ok=True)
+            old_dir = f"{pathname}/old"
+            mkdir(old_dir)
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            out_file.rename(old_dir / f"{timestamp}-{filename}")
+            filename.rename(old_dir / f"{timestamp}-{filename}")
 
         # Get UUID
         r = requests.post(
@@ -163,7 +163,7 @@ class Game:
             )
         # response_code = urllib.request.urlopen(url).getcode()
         try:
-            utils.download(url, self.dir, self.name, filename)
+            utils.download(url, self.destination_path, self.name, filename)
         except utils.NoDownloadError:
             print("Http response is not a download, skipping")
 
@@ -171,7 +171,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {out_file}
+                    Path: {pathname}
                     File: {filename}
                     Request URL: {url}
                     This request failed due to a missing response header
@@ -187,7 +187,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {out_file}
+                    Path: {pathname}
                     File: {filename}
                     Request URL: {url}
                     Request Response Code: {e.code}
@@ -199,10 +199,10 @@ class Game:
             return
 
         # Verify
-        if utils.md5sum(out_file) != d["md5_hash"]:
+        if utils.md5sum(f"{pathname}/{filename}") != d["md5_hash"]:
             print(f"Failed to verify {filename}")
             return
 
         # Create checksum file
-        with out_file.with_suffix(".md5").open("w") as f:
+        with open(f"{pathname}/{filename}.md5", "w") as f:
             f.write(d["md5_hash"])
