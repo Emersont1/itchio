@@ -43,7 +43,7 @@ def clean_path(path):
         path_clean = re.sub(r"[<>:|?*\"\/\\]", "-", path)
         # This checks for strings that end in ... or similar,
         # weird corner case that affects fewer than 0.1% of titles
-        path_clean = re.sub(r'(.)[.]\1+$', "-", path_clean)
+        path_clean = re.sub(r"(.)[.]\1+$", "-", path_clean)
         return path_clean
     return path
 
