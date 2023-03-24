@@ -5,8 +5,8 @@ import datetime
 from os import path
 from os import mkdir
 from os import makedirs
-import requests
 from sys import argv
+import requests
 
 from itchiodl import utils
 
@@ -16,7 +16,7 @@ class Game:
 
     def __init__(self, data):
         self.args = argv[1:]
-        if '--human-folders' in self.args:
+        if "--human-folders" in self.args:
             self.humanFolders = True
         else:
             self.humanFolders = False
@@ -37,7 +37,8 @@ class Game:
         if self.humanFolders:
             self.game_slug = utils.clean_path(self.data["title"])
             self.publisher_slug = self.data.get("user").get("display_name")
-            # This Branch covers the case that the user has not set a display name, and defaults to their username
+            # This Branch covers the case that the user has
+            # not set a display name, and defaults to their username
             if not self.publisher_slug:
                 self.publisher_slug = self.data.get("user").get("username")
         else:
