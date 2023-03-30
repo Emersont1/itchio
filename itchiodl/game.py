@@ -2,10 +2,8 @@ import re
 import json
 import urllib
 import datetime
-from os import path
-from os import mkdir
-from os import makedirs
 from sys import argv
+from pathlib import Path
 import requests
 
 from itchiodl import utils
@@ -44,14 +42,14 @@ class Game:
         else:
             self.publisher_slug = matches.group(1)
 
-        self.destination_path = path.normpath(f"{self.publisher_slug}/{self.game_slug}")
+        self.destination_path = Path(f"{self.publisher_slug}/{self.game_slug}")
         self.files = []
         self.downloads = []
-        #self.dir = (
+        # self.dir = (
         #    Path(".")
         #    / utils.clean_path(self.publisher_slug)
         #    / utils.clean_path(self.game_slug)
-        #)
+        # )
 
     def load_downloads(self, token):
         """Load all downloads for this game"""
@@ -80,8 +78,7 @@ class Game:
 
         self.load_downloads(token)
 
-        if not path.exists(self.destination_path):
-            makedirs(self.destination_path)
+        self.destination_path.mkdir(parents=True, exist_ok=True)
 
         for d in self.downloads:
             if (
@@ -113,23 +110,26 @@ class Game:
 
         filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         pathname = self.destination_path
-        if path.exists(f"{pathname}/{filename}"):
+        filepath = Path(f"{pathname}/{filename}")
+        hashpath = Path(f"{pathname}/{filename}.md5")
+        oldpath = Path(f"{pathname}/old")
+        if filepath.exists():
             print(f"File Already Exists! {filename}")
-            if path.exists(f"{pathname}/{filename}.md5"):
-                with open(f"{pathname}/{filename}.md5", "r") as f:
-                    md5 = f.read().strip()
+            if hashpath.exists():
+                with hashpath.open(mode="r") as hashfile:
+                    md5 = hashfile.read().strip()
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {filename}")
                         return
                     print(f"MD5 Mismatch! {filename}")
             else:
-                md5 = utils.md5sum(f"{pathname}/{filename}")
+                md5 = utils.md5sum(filepath)
                 if md5 == d["md5_hash"]:
                     print(f"Skipping {self.name} - {filename}")
 
                     # Create checksum file
-                    with open(f"{pathname}/{filename}.md5", "w") as f:
-                        f.write(d["md5_hash"])
+                    with hashpath.open(mode="w") as hashfile:
+                        hashfile.write(d["md5_hash"])
                     return
                 # Old Download or corrupted file?
                 corrupted = False
@@ -137,12 +137,11 @@ class Game:
                     filename.remove()
                     return
 
-            old_dir = f"{pathname}/old"
-            mkdir(old_dir)
+            oldpath.mkdir()
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            filename.rename(old_dir / f"{timestamp}-{filename}")
+            filename.rename(oldpath / f"{timestamp}-{filename}")
 
         # Get UUID
         r = requests.post(
@@ -200,10 +199,10 @@ class Game:
             return
 
         # Verify
-        if utils.md5sum(f"{pathname}/{filename}") != d["md5_hash"]:
+        if utils.md5sum(filepath) != d["md5_hash"]:
             print(f"Failed to verify {filename}")
             return
 
         # Create checksum file
-        with open(f"{pathname}/{filename}.md5", "w") as f:
-            f.write(d["md5_hash"])
+        with hashpath.open(mode="w") as hashfile:
+            hashfile.write(d["md5_hash"])
