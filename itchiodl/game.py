@@ -90,7 +90,7 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with open(f"{self.destination_path}.json", "w") as f:
+        with self.destination_path.with_suffix(".json").open(mode="w") as f:
             json.dump(
                 {
                     "name": self.name,
@@ -110,8 +110,8 @@ class Game:
 
         filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         filepath = Path(f"{self.destination_path}/{filename}")
-        hashpath = Path(f"{self.destination_path}/{filename}.md5")
-        oldpath = Path(f"{self.destination_path}/old")
+        hashpath = filepath.with_suffix(".md5")
+
         if filepath.exists():
             print(f"File Already Exists! {filename}")
             if hashpath.exists():
@@ -135,12 +135,12 @@ class Game:
                 # if corrupted:
                 #     filename.remove()
                 #    return
-
-            oldpath.mkdir()
+            old_dir = self.destination_path / "old"
+            old_dir.mkdir(exist_ok=True)
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            filename.rename(oldpath / f"{timestamp}-{filename}")
+            filename.rename(old_dir / f"{timestamp}-{filename}")
 
         # Get UUID
         r = requests.post(
