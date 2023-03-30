@@ -99,11 +99,10 @@ class Library:
         )
         k = json.loads(gsp.text)
         game = Game(k)
-        game.id = self.key_pairs.get(str(game_id), False)
-        #if str(game_id) in self.key_pairs.keys():
-        #    game.id = self.key_pairs[str(game_id)]
-        #else:
-        #    game.id = False
+        if str(game_id) in self.key_pairs:
+            game.id = self.key_pairs[str(game_id)]
+        else:
+            game.id = False
         game.game_id = game_id
         self.games.append(game)
 
