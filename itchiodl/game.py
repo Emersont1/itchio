@@ -109,10 +109,9 @@ class Game:
         print(f"Downloading {d['filename']}")
 
         filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
-        pathname = self.destination_path
-        filepath = Path(f"{pathname}/{filename}")
-        hashpath = Path(f"{pathname}/{filename}.md5")
-        oldpath = Path(f"{pathname}/old")
+        filepath = Path(f"{self.destination_path}/{filename}")
+        hashpath = Path(f"{self.destination_path}/{filename}.md5")
+        oldpath = Path(f"{self.destination_path}/old")
         if filepath.exists():
             print(f"File Already Exists! {filename}")
             if hashpath.exists():
@@ -171,7 +170,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {pathname}
+                    Path: {self.destination_path}
                     File: {filename}
                     Request URL: {url}
                     This request failed due to a missing response header
@@ -187,7 +186,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {pathname}
+                    Path: {self.destination_path}
                     File: {filename}
                     Request URL: {url}
                     Request Response Code: {e.code}

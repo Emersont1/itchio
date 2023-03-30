@@ -21,12 +21,12 @@ def download(url, path, name, file):
     ):
         raise NoDownloadError("Http response is not a download, skipping")
 
-    cd = rsp.headers.get("Content-Disposition")
+    # cd = rsp.headers.get("Content-Disposition")
 
-    #filename_re = re.search(r'filename="(.+)"', cd)
-    #if filename_re is None:
+    # filename_re = re.search(r'filename="(.+)"', cd)
+    # if filename_re is None:
     #    filename = file
-    #else:
+    # else:
     #    filename = filename_re.group(1)
 
     with open(f"{path}/{file}", "wb") as f:
