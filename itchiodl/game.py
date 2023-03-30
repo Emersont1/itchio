@@ -131,10 +131,10 @@ class Game:
                         hashfile.write(d["md5_hash"])
                     return
                 # Old Download or corrupted file?
-                corrupted = False
-                if corrupted:
-                    filename.remove()
-                    return
+                # corrupted = False
+                # if corrupted:
+                #     filename.remove()
+                #    return
 
             oldpath.mkdir()
 
