@@ -54,7 +54,7 @@ class Library:
 
         for s in j["owned_keys"]:
             if str(s.get("game_id")) in self.key_pairs:
-                duplicates+=1
+                duplicates += 1
                 # The duplicate download key check assumes that a consecutive
                 # string of ten identical game ids indicates the list has not changed
                 # Duplicate game keys can happen if you buy multiple bundles containing the same item
@@ -63,7 +63,7 @@ class Library:
                     print("Assuming that the owned keys have not changed")
                     return 0
             else:
-                self.key_pairs.update({str(s["game_id"]):s["id"]})
+                self.key_pairs.update({str(s["game_id"]): s["id"]})
                 duplicates = 0
 
         return len(j["owned_keys"])
@@ -82,7 +82,7 @@ class Library:
                 break
             page += 1
         with p.open(mode="w") as outfile:
-            json.dump(self.key_pairs,outfile,indent=0)
+            json.dump(self.key_pairs, outfile, indent=0)
             outfile.close()
 
     def load_game(self, publisher, title):
@@ -124,15 +124,15 @@ class Library:
         """Download all games in the library"""
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             i = [0, 0]
-            l = len(self.games)
+            ln = len(self.games)
             lock = threading.RLock()
 
-            def dl(i, g):
+            def dl(ix, g):
                 try:
                     g.download(self.login, platform)
                     with lock:
                         i[0] += 1
-                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    print(f"Downloaded {g.name} ({ix[0]} of {ln})")
                 except NoDownloadError as e:
                     print(e)
                     i[1] += 1
