@@ -65,7 +65,7 @@ class Game:
             )
         j = r.json()
         # This converts a null j.uploads into an empty dictionary and uses the safer .get accessor
-        if j.get("uploads") is None:
+        if "uploads" in j:
             j.update({"uploads": []})
         for uploads in j.get("uploads"):
             self.downloads.append(uploads)
