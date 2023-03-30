@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from os.path import exists
 from itchiodl.game import Game
 from itchiodl.utils import NoDownloadError
+from pathlib import Path
 
 
 class Library:
@@ -58,7 +59,7 @@ class Library:
                 # string of ten identical game ids indicates the list has not changed
                 # Duplicate game keys can happen if you buy multiple bundles containing the same item
                 # print("duplicate game ID", s["game_id"]) # Old debug line
-                if duplicates > 9 and exists("key_pairs.json"):
+                if duplicates > 9:
                     print("Assuming that the owned keys have not changed")
                     return 0
             else:
@@ -70,19 +71,19 @@ class Library:
     def load_owned_keys(self):
         """Load game_id:download_id pairs only and stores them in the library.keyPairs dictionary"""
         page = 1
-        if exists("key_pairs.json"):
-            infile = open("key_pairs.json","r")
-            self.key_pairs.update(json.loads(infile.read()))
-            infile.close()
+        p = Path("key_pairs.json")
+        if p.exists():
+            with p.open(mode="r") as infile:
+                self.key_pairs.update(json.load(infile))
+                infile.close()
         while True:
             n = self.load_game_page_keys(page)
             if n == 0:
                 break
             page += 1
-
-        outfile = open("key_pairs.json", "w")
-        json.dump(self.key_pairs,outfile,indent=0)
-        outfile.close()
+        with p.open(mode="w") as outfile:
+            json.dump(self.key_pairs,outfile,indent=0)
+            outfile.close()
 
     def load_game(self, publisher, title):
         """Load a game by publisher and title"""
@@ -99,7 +100,10 @@ class Library:
         )
         k = json.loads(gsp.text)
         game = Game(k)
-        game.id = self.key_pairs.get(str(game_id), False)
+        if str(game_id) in self.key_pairs.keys():
+            game.id = self.key_pairs[str(game_id)]
+        else:
+            game.id = False
         game.game_id = game_id
         self.games.append(game)
 
