@@ -2,13 +2,11 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
+from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
-from os.path import exists
 from itchiodl.game import Game
 from itchiodl.utils import NoDownloadError
-from pathlib import Path
-
 
 class Library:
     """Representation of a user's game library"""
@@ -57,7 +55,8 @@ class Library:
                 duplicates += 1
                 # The duplicate download key check assumes that a consecutive
                 # string of ten identical game ids indicates the list has not changed
-                # Duplicate game keys can happen if you buy multiple bundles containing the same item
+                # Duplicate game keys can happen
+                # if you buy multiple bundles containing the same item
                 # print("duplicate game ID", s["game_id"]) # Old debug line
                 if duplicates > 9:
                     print("Assuming that the owned keys have not changed")
@@ -100,10 +99,11 @@ class Library:
         )
         k = json.loads(gsp.text)
         game = Game(k)
-        if str(game_id) in self.key_pairs.keys():
-            game.id = self.key_pairs[str(game_id)]
-        else:
-            game.id = False
+        game.id = self.key_pairs.get(str(game_id), False)
+        #if str(game_id) in self.key_pairs.keys():
+        #    game.id = self.key_pairs[str(game_id)]
+        #else:
+        #    game.id = False
         game.game_id = game_id
         self.games.append(game)
 
