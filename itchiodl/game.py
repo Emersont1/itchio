@@ -111,8 +111,17 @@ class Game:
 
         out_file = self.dir / filename
 
+        given_hash = d.get("md5_hash") is not None
+        if not given_hash:
+            print(f"Missing MD5 hash from API response for {filename}")
+
         if out_file.exists():
             print(f"File Already Exists! {filename}")
+
+            if not given_hash:
+                print(f"Skipping {self.name} - {filename}")
+                return
+
             md5_file = out_file.with_suffix(".md5")
             if md5_file.exists():
                 with md5_file.open("r") as f:
@@ -198,11 +207,19 @@ class Game:
 
             return
 
-        # Verify
-        if utils.md5sum(out_file) != d["md5_hash"]:
-            print(f"Failed to verify {filename}")
-            return
+        if given_hash:
+            # Verify
+            if utils.md5sum(out_file) != d["md5_hash"]:
+                print(f"Failed to verify {filename}")
+                return
 
-        # Create checksum file
-        with out_file.with_suffix(".md5").open("w") as f:
-            f.write(d["md5_hash"])
+            # Create checksum file
+            with out_file.with_suffix(".md5").open("w") as f:
+                f.write(d["md5_hash"])
+        else:
+            print(
+                (
+                    f"Unable to verify `{filename}` downloaded correctly due to missing hash data "
+                    "from itch.io"
+                )
+            )
