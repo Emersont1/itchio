@@ -3,7 +3,6 @@ import json
 import urllib
 import datetime
 from pathlib import Path
-from sys import argv
 import requests
 
 from itchiodl import utils
@@ -12,12 +11,8 @@ from itchiodl import utils
 class Game:
     """Representation of a game download"""
 
-    def __init__(self, data):
-        self.args = argv[1:]
-        if "--human-folders" in self.args:
-            self.humanFolders = True
-        else:
-            self.humanFolders = False
+    def __init__(self, data, human_folders: bool):
+        self.human_folders = human_folders
 
         self.data = data["game"]
         self.name = self.data["title"]
@@ -32,7 +27,7 @@ class Game:
 
         matches = re.match(r"https://(.+)\.itch\.io/(.+)", self.link)
         self.game_slug = matches.group(2)
-        if self.humanFolders:
+        if self.human_folders:
             self.game_slug = utils.clean_path(self.data["title"])
             self.publisher_slug = self.data.get("user").get("display_name")
             # This Branch covers the case that the user has

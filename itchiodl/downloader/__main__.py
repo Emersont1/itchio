@@ -20,11 +20,11 @@ def main():
 
     parser.add_argument(
         "--human-folders",
-        type=bool,
-        default=False,
-        const=True,
-        nargs="?",
-        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title",
+        action="store_true",
+        help=(
+            "Download Folders are named based on the full text version of the title instead of "
+            "the trimmed URL title"
+        ),
     )
 
     parser.add_argument(
@@ -58,7 +58,7 @@ def main():
     else:
         l = args.api_key
 
-    lib = itchiodl.Library(l, args.jobs)
+    lib = itchiodl.Library(l, jobs=args.jobs, human_folders=args.human_folders)
 
     if args.download_publisher:
         lib.load_games(args.download_publisher)
