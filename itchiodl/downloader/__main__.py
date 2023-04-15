@@ -21,7 +21,7 @@ def main():
         "--platform",
         help=(
             "Platform to download for (default: all), will accept values like 'windows', 'linux', "
-            "'osx' and android"
+            "'osx' and 'android'"
         ),
     )
 
