@@ -1,4 +1,3 @@
-import json
 from bs4 import BeautifulSoup as soup
 import requests
 
@@ -41,7 +40,7 @@ def LoginAPI(user, password):
         print(warning)
         print(r.text)
         raise RuntimeError
-    t = json.loads(r.text)
+    t = r.json()
 
     if not t["success"]:
         print("Error: success key is not true")
