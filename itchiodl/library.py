@@ -16,8 +16,10 @@ class Library:
         self.login = login
         self.games = []
         self.jobs = jobs
-        self.human_folders = human_folders
-        self.output_dir = output_dir
+        self.game_kwargs = {
+            "human_folders": human_folders,
+            "output_dir": output_dir,
+        }
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
@@ -29,7 +31,7 @@ class Library:
         j = json.loads(r.text)
 
         for s in j["owned_keys"]:
-            self.games.append(Game(s, self.human_folders, self.output_dir))
+            self.games.append(Game(s, **self.game_kwargs))
 
         return len(j["owned_keys"])
 
@@ -56,7 +58,7 @@ class Library:
         )
         k = gsp.json()
         if k != {"uploads": {}}:
-            self.games.append(Game(k, self.human_folders, self.output_dir))
+            self.games.append(Game(k, **self.game_kwargs))
             return
         print(f"{title} is a purchased game.")
         i = 1
@@ -87,7 +89,7 @@ class Library:
                 headers={"Authorization": self.login},
             )
             k = json.loads(gsp.text)
-            self.games.append(Game(k, self.human_folders, self.output_dir))
+            self.games.append(Game(k, **self.game_kwargs))
 
     def download_library(self, platform=None):
         """Download all games in the library"""
