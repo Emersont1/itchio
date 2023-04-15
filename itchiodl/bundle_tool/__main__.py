@@ -3,6 +3,8 @@ import itchiodl
 
 
 def main():
+    """CLI tool to at all games in a bundle to your library."""
+
     user = input("Username: ")
     password = getpass("Password: ")
 

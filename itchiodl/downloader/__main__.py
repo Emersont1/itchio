@@ -6,6 +6,8 @@ import itchiodl
 
 
 def main():
+    """CLI tool to download all games in your library."""
+
     parser = argparse.ArgumentParser(
         prog="itch-download", description="Download / archive your itch.io library."
     )
@@ -17,7 +19,10 @@ def main():
     parser.add_argument(
         "-p",
         "--platform",
-        help="Platform to download for (default: all), will accept values like 'windows', 'linux', 'osx' and android",
+        help=(
+            "Platform to download for (default: all), will accept values like 'windows', 'linux', "
+            "'osx' and android"
+        ),
     )
 
     parser.add_argument(
@@ -26,7 +31,10 @@ def main():
         default=False,
         const=True,
         nargs="?",
-        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title",
+        help=(
+            "Download Folders are named based on the full text version of the title instead of "
+            "the trimmed URL title"
+        ),
     )
 
     parser.add_argument(
