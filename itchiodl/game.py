@@ -67,8 +67,8 @@ class Game:
         # This converts a null j.uploads into an empty dictionary and uses the safer .get accessor
         if "uploads" in j:
             j.update({"uploads": []})
-        for uploads in j.get("uploads"):
-            self.downloads.append(uploads)
+            for uploads in j["uploads"]:
+                self.downloads.append(uploads)
 
     def download(self, token, platform):
         """Download a singular file"""
