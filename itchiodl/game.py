@@ -4,9 +4,18 @@ import urllib
 import datetime
 from pathlib import Path
 from sys import argv
+from enum import Enum, auto
 import requests
 
 from itchiodl import utils
+
+
+class ReturnStatus(Enum):
+    """Returned by a method to explain what was accomplished"""
+
+    SUCCESS = auto()
+    SKIP_EXISTING_FILE = auto()
+    CORRUPTED_FILE = auto()
 
 
 class Game:
@@ -103,6 +112,48 @@ class Game:
                 indent=2,
             )
 
+    def backup_download(self, out_file: Path, filename: str, given_hash: bool, d: dict):
+        """Backup existing downloads if new file is available"""
+
+        if out_file.exists():
+            print(f"File Already Exists! {filename}")
+
+            if not given_hash:
+                print(f"Unable to verify file. Skipping {self.name} - {filename}")
+                return ReturnStatus.SKIP_EXISTING_FILE
+
+            md5_file = out_file.with_suffix(".md5")
+            if md5_file.exists():
+                with md5_file.open("r") as f:
+                    md5 = f.read().strip()
+                    if md5 == d["md5_hash"]:
+                        print(f"Skipping {self.name} - {filename}")
+                        return ReturnStatus.SKIP_EXISTING_FILE
+                    print(f"MD5 Mismatch! {filename}")
+            else:
+                md5 = utils.md5sum(str(out_file))
+                if md5 == d["md5_hash"]:
+                    print(f"Skipping {self.name} - {filename}")
+
+                    # Create checksum file
+                    with md5_file.open("w") as f:
+                        f.write(d["md5_hash"])
+                    return ReturnStatus.SKIP_EXISTING_FILE
+                # Old Download or corrupted file?
+                corrupted = False
+                if corrupted:
+                    out_file.remove()
+                    return ReturnStatus.CORRUPTED_FILE
+
+            old_dir = self.dir / "old"
+            old_dir.mkdir(exist_ok=True)
+
+            print(f"Moving {filename} to old/")
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+            out_file.rename(old_dir / f"{timestamp}-{filename}")
+
+        return ReturnStatus.SUCCESS
+
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
         print(f"Downloading {d['filename']}")
@@ -115,42 +166,11 @@ class Game:
         if not given_hash:
             print(f"Missing MD5 hash from API response for {filename}")
 
-        if out_file.exists():
-            print(f"File Already Exists! {filename}")
-
-            if not given_hash:
-                print(f"Skipping {self.name} - {filename}")
-                return
-
-            md5_file = out_file.with_suffix(".md5")
-            if md5_file.exists():
-                with md5_file.open("r") as f:
-                    md5 = f.read().strip()
-                    if md5 == d["md5_hash"]:
-                        print(f"Skipping {self.name} - {filename}")
-                        return
-                    print(f"MD5 Mismatch! {filename}")
-            else:
-                md5 = utils.md5sum(str(out_file))
-                if md5 == d["md5_hash"]:
-                    print(f"Skipping {self.name} - {filename}")
-
-                    # Create checksum file
-                    with md5_file.open("w") as f:
-                        f.write(d["md5_hash"])
-                    return
-                # Old Download or corrupted file?
-                corrupted = False
-                if corrupted:
-                    out_file.remove()
-                    return
-
-            old_dir = self.dir / "old"
-            old_dir.mkdir(exist_ok=True)
-
-            print(f"Moving {filename} to old/")
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            out_file.rename(old_dir / f"{timestamp}-{filename}")
+        if (
+            self.backup_download(out_file, filename, given_hash, d)
+            != ReturnStatus.SUCCESS
+        ):
+            return
 
         # Get UUID
         r = requests.post(
