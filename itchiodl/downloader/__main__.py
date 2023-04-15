@@ -46,7 +46,7 @@ def main():
     parser.add_argument(
         "--download-game",
         type=str,
-        help="Download a specific game, should be in the format publisher.itch.io/game",
+        help="Download a specific game, should be in the format 'https://publisher.itch.io/game'",
     )
 
     args = parser.parse_args()
