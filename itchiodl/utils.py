@@ -8,10 +8,10 @@ class NoDownloadError(Exception):
     """No download found exception"""
 
 
-def download(url, path, name, file):
+def download(url, pathname, name, filename):
     """Downloads a file from a url and saves it to a path, skips it if it already exists."""
 
-    desc = f"{name} - {file}"
+    desc = f"{name} - {filename}"
     print(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
@@ -29,12 +29,12 @@ def download(url, path, name, file):
     # else:
     #    filename = filename_re.group(1)
 
-    with open(f"{path}/{file}", "wb") as f:
+    with open(f"{pathname}/{filename}", "wb") as f:
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
-    print(f"Downloaded {file}")
-    return f"{path}/{file}", True
+    print(f"Downloaded {filename}")
+    return f"{pathname}/{filename}", True
 
 
 def clean_path(path):
@@ -48,10 +48,10 @@ def clean_path(path):
     return path
 
 
-def md5sum(pathname):
+def md5sum(path):
     """Returns the md5sum of a file"""
     md5 = hashlib.md5()
-    with open(pathname, "rb") as f:
+    with path.open("rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             md5.update(chunk)
     return md5.hexdigest()

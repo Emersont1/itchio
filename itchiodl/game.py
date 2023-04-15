@@ -42,14 +42,14 @@ class Game:
         else:
             self.publisher_slug = matches.group(1)
 
-        self.destination_path = Path(f"{self.publisher_slug}/{self.game_slug}")
+        # self.destination_path = Path(self.publisher_slug / self.game_slug)
         self.files = []
         self.downloads = []
-        # self.dir = (
-        #    Path(".")
-        #    / utils.clean_path(self.publisher_slug)
-        #    / utils.clean_path(self.game_slug)
-        # )
+        self.destination_path = (
+            Path(".")
+            / utils.clean_path(self.publisher_slug)
+            / utils.clean_path(self.game_slug)
+        )
 
     def load_downloads(self, token):
         """Load all downloads for this game"""
@@ -109,7 +109,7 @@ class Game:
         print(f"Downloading {d['filename']}")
 
         filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
-        filepath = Path(f"{self.destination_path}/{filename}")
+        filepath = self.destination_path / filename
         hashpath = filepath.with_suffix(".md5")
 
         if filepath.exists():
@@ -140,7 +140,7 @@ class Game:
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            filename.rename(old_dir / f"{timestamp}-{filename}")
+            filepath.rename(old_dir / f"{timestamp}-{filename}")
 
         # Get UUID
         r = requests.post(
