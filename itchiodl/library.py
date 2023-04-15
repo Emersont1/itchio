@@ -49,11 +49,16 @@ class Library:
         j = json.loads(rsp.text)
         game_id = j["id"]
         gsp = requests.get(
-            f"https://api.itch.io/games/{game_id}/uploads",
+            f"https://api.itch.io/games/{game_id}",
             headers={"Authorization": self.login},
         )
         k = gsp.json()
-        if k != {"uploads": {}}:
+        usp = requests.get(
+            f"https://api.itch.io/games/{game_id}/uploads",
+            headers={"Authorization": self.login},
+        )
+        l = usp.json()
+        if l != {"uploads": {}}:
             self.games.append(Game(k))
             return
         print(f"{title} is a purchased game.")
