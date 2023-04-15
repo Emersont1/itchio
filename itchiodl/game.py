@@ -11,8 +11,9 @@ from itchiodl import utils
 class Game:
     """Representation of a game download"""
 
-    def __init__(self, data, human_folders: bool):
+    def __init__(self, data, human_folders: bool, output_dir: str):
         self.human_folders = human_folders
+        self.output_path = Path(output_dir)
 
         self.data = data["game"]
         self.name = self.data["title"]
@@ -40,7 +41,7 @@ class Game:
         self.files = []
         self.downloads = []
         self.dir = (
-            Path(".")
+            self.output_path
             / utils.clean_path(self.publisher_slug)
             / utils.clean_path(self.game_slug)
         )
