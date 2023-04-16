@@ -1,9 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
+from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
-
 from itchiodl.game import Game
 from itchiodl.utils import NoDownloadError
 
@@ -15,6 +15,7 @@ class Library:
         self.login = login
         self.games = []
         self.jobs = jobs
+        self.key_pairs = {}
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
@@ -39,8 +40,53 @@ class Library:
                 break
             page += 1
 
+    def load_game_page_keys(self, page):
+        """Load a page of game keys via the API"""
+        duplicates = 0
+        print("Loading page", page)
+        r = requests.get(
+            f"https://api.itch.io/profile/owned-keys?page={page}",
+            headers={"Authorization": self.login},
+        )
+        j = json.loads(r.text)
+
+        for s in j["owned_keys"]:
+            if str(s.get("game_id")) in self.key_pairs:
+                duplicates += 1
+                # The duplicate download key check assumes that a consecutive
+                # string of ten identical game ids indicates the list has not changed
+                # Duplicate game keys can happen
+                # if you buy multiple bundles containing the same item
+                # print("duplicate game ID", s["game_id"]) # Old debug line
+                if duplicates > 9:
+                    print("Assuming that the owned keys have not changed")
+                    return 0
+            else:
+                self.key_pairs.update({str(s["game_id"]): s["id"]})
+                duplicates = 0
+
+        return len(j["owned_keys"])
+
+    def load_owned_keys(self):
+        """Load game_id:download_id pairs only and stores them in the library.keyPairs dictionary"""
+        page = 1
+        p = Path("key_pairs.json")
+        if p.exists():
+            with p.open(mode="r") as infile:
+                self.key_pairs.update(json.load(infile))
+                infile.close()
+        while True:
+            n = self.load_game_page_keys(page)
+            if n == 0:
+                break
+            page += 1
+        with p.open(mode="w") as outfile:
+            json.dump(self.key_pairs, outfile, indent=0)
+            outfile.close()
+
     def load_game(self, publisher, title):
         """Load a game by publisher and title"""
+        self.load_owned_keys()
         rsp = requests.get(
             f"https://{publisher}.itch.io/{title}/data.json",
             headers={"Authorization": self.login},
@@ -48,30 +94,17 @@ class Library:
         j = rsp.json()
         game_id = j["id"]
         gsp = requests.get(
-            f"https://api.itch.io/games/{game_id}/uploads",
+            f"https://api.itch.io/games/{game_id}",
             headers={"Authorization": self.login},
         )
-        k = gsp.json()
-        if k != {"uploads": {}}:
-            self.games.append(Game(k))
-            return
-        print(f"{title} is a purchased game.")
-        i = 1
-        while self.games == []:
-            j = self.load_game_page(i)
-
-            self.games = [
-                x
-                for x in self.games
-                if x.link == f"https://{publisher}.itch.io/{title}"
-            ]
-
-            if j == 0:
-                break
-            i += 1
-
-        if self.games == []:
-            print(f"Cannot find {title} in owned keys, you may not own it.")
+        k = json.loads(gsp.text)
+        game = Game(k)
+        if str(game_id) in self.key_pairs:
+            game.id = self.key_pairs[str(game_id)]
+        else:
+            game.id = False
+        game.game_id = game_id
+        self.games.append(game)
 
     def load_games(self, publisher):
         """Load all games by publisher"""
@@ -90,15 +123,15 @@ class Library:
         """Download all games in the library"""
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             i = [0, 0]
-            l = len(self.games)
+            ln = len(self.games)
             lock = threading.RLock()
 
-            def dl(i, g):
+            def dl(ix, g):
                 try:
                     g.download(self.login, platform)
                     with lock:
                         i[0] += 1
-                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    print(f"Downloaded {g.name} ({ix[0]} of {ln})")
                 except NoDownloadError as e:
                     print(e)
                     i[1] += 1

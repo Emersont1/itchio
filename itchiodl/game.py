@@ -64,8 +64,11 @@ class Game:
                 headers={"Authorization": token},
             )
         j = r.json()
-        for d in j["uploads"]:
-            self.downloads.append(d)
+        # This converts a null j.uploads into an empty dictionary and uses the safer .get accessor
+        if "uploads" in j:
+            j.update({"uploads": []})
+            for uploads in j["uploads"]:
+                self.downloads.append(uploads)
 
     def download(self, token, platform):
         """Download a singular file"""
