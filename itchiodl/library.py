@@ -12,10 +12,14 @@ from itchiodl.utils import NoDownloadError
 class Library:
     """Representation of a user's game library"""
 
-    def __init__(self, login, jobs=4):
+    def __init__(self, login, jobs=4, human_folders=False, output_dir="."):
         self.login = login
         self.games = []
         self.jobs = jobs
+        self.game_kwargs = {
+            "human_folders": human_folders,
+            "output_dir": output_dir,
+        }
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
@@ -27,7 +31,7 @@ class Library:
         j = json.loads(r.text)
 
         for s in j["owned_keys"]:
-            self.games.append(Game(s))
+            self.games.append(Game(s, **self.game_kwargs))
 
         return len(j["owned_keys"])
 
@@ -54,7 +58,7 @@ class Library:
         )
         k = gsp.json()
         if k != {"uploads": {}}:
-            self.games.append(Game(k))
+            self.games.append(Game(k, **self.game_kwargs))
             return
         print(f"{title} is a purchased game.")
         i = 1
@@ -85,7 +89,7 @@ class Library:
                 headers={"Authorization": self.login},
             )
             k = json.loads(gsp.text)
-            self.games.append(Game(k))
+            self.games.append(Game(k, **self.game_kwargs))
 
     def download_library(self, platform=None):
         """Download all games in the library"""
