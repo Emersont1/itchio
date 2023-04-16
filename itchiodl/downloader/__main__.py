@@ -27,7 +27,7 @@ def main():
 
     parser.add_argument(
         "--human-folders",
-        action='store_true',
+        action="store_true",
         help=(
             "Download Folders are named based on the full text version of the title instead of "
             "the trimmed URL title"
