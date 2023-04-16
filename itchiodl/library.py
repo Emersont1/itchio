@@ -1,4 +1,3 @@
-import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
@@ -24,7 +23,7 @@ class Library:
             f"https://api.itch.io/profile/owned-keys?page={page}",
             headers={"Authorization": self.login},
         )
-        j = json.loads(r.text)
+        j = r.json()
 
         for s in j["owned_keys"]:
             self.games.append(Game(s))
@@ -46,7 +45,7 @@ class Library:
             f"https://{publisher}.itch.io/{title}/data.json",
             headers={"Authorization": self.login},
         )
-        j = json.loads(rsp.text)
+        j = rsp.json()
         game_id = j["id"]
         gsp = requests.get(
             f"https://api.itch.io/games/{game_id}/uploads",
@@ -84,7 +83,7 @@ class Library:
                 f"https://api.itch.io/games/{game_id}",
                 headers={"Authorization": self.login},
             )
-            k = json.loads(gsp.text)
+            k = gsp.json()
             self.games.append(Game(k))
 
     def download_library(self, platform=None):
