@@ -4,9 +4,18 @@ import urllib
 import datetime
 from pathlib import Path
 from sys import argv
+from enum import Enum, auto
 import requests
 
 from itchiodl import utils
+
+
+class ReturnStatus(Enum):
+    """Returned by a method to explain what was accomplished"""
+
+    SUCCESS = auto()
+    SKIP_EXISTING_FILE = auto()
+    CORRUPTED_FILE = auto()
 
 
 class Game:
@@ -103,23 +112,23 @@ class Game:
                 indent=2,
             )
 
-    def do_download(self, d, token):
-        """Download a single file, checking for existing files"""
-        print(f"Downloading {d['filename']}")
-
-        filename = d["filename"] or d["display_name"] or d["id"]
-
-        out_file = self.dir / filename
+    def backup_download(self, out_file: Path, filename: str, given_hash: bool, d: dict):
+        """Backup existing downloads if new file is available"""
 
         if out_file.exists():
             print(f"File Already Exists! {filename}")
+
+            if not given_hash:
+                print(f"Unable to verify file. Skipping {self.name} - {filename}")
+                return ReturnStatus.SKIP_EXISTING_FILE
+
             md5_file = out_file.with_suffix(".md5")
             if md5_file.exists():
                 with md5_file.open("r") as f:
                     md5 = f.read().strip()
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {filename}")
-                        return
+                        return ReturnStatus.SKIP_EXISTING_FILE
                     print(f"MD5 Mismatch! {filename}")
             else:
                 md5 = utils.md5sum(str(out_file))
@@ -129,12 +138,12 @@ class Game:
                     # Create checksum file
                     with md5_file.open("w") as f:
                         f.write(d["md5_hash"])
-                    return
+                    return ReturnStatus.SKIP_EXISTING_FILE
                 # Old Download or corrupted file?
                 corrupted = False
                 if corrupted:
                     out_file.remove()
-                    return
+                    return ReturnStatus.CORRUPTED_FILE
 
             old_dir = self.dir / "old"
             old_dir.mkdir(exist_ok=True)
@@ -142,6 +151,26 @@ class Game:
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
             out_file.rename(old_dir / f"{timestamp}-{filename}")
+
+        return ReturnStatus.SUCCESS
+
+    def do_download(self, d, token):
+        """Download a single file, checking for existing files"""
+        print(f"Downloading {d['filename']}")
+
+        filename = d["filename"] or d["display_name"] or d["id"]
+
+        out_file = self.dir / filename
+
+        given_hash = d.get("md5_hash") is not None
+        if not given_hash:
+            print(f"Missing MD5 hash from API response for {filename}")
+
+        if (
+            self.backup_download(out_file, filename, given_hash, d)
+            != ReturnStatus.SUCCESS
+        ):
+            return
 
         # Get UUID
         r = requests.post(
@@ -198,11 +227,19 @@ class Game:
 
             return
 
-        # Verify
-        if utils.md5sum(out_file) != d["md5_hash"]:
-            print(f"Failed to verify {filename}")
-            return
+        if given_hash:
+            # Verify
+            if utils.md5sum(out_file) != d["md5_hash"]:
+                print(f"Failed to verify {filename}")
+                return
 
-        # Create checksum file
-        with out_file.with_suffix(".md5").open("w") as f:
-            f.write(d["md5_hash"])
+            # Create checksum file
+            with out_file.with_suffix(".md5").open("w") as f:
+                f.write(d["md5_hash"])
+        else:
+            print(
+                (
+                    f"Unable to verify `{filename}` downloaded correctly due to missing hash data "
+                    "from itch.io"
+                )
+            )
