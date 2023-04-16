@@ -22,4 +22,4 @@ jobs:
         pip install poetry
         poetry install
     - name: Analysing the code with pylint
-      run: poetry run pylint --rcfile=.pylintrc itchiodl/
+      run: poetry run pylint --rcfile=.pylintrc itchiodl/ itchiodl/downloader/ itchiodl/bundle_tool/

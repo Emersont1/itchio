@@ -6,7 +6,11 @@ import itchiodl
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="python -m hstp", description="Build an ")
+    """CLI tool to download all games in your library."""
+
+    parser = argparse.ArgumentParser(
+        prog="itch-download", description="Download / archive your itch.io library."
+    )
 
     parser.add_argument(
         "-k", "--api-key", help="Use API key instead of username/password"
@@ -15,16 +19,19 @@ def main():
     parser.add_argument(
         "-p",
         "--platform",
-        help="Platform to download for (default: all), will accept values like 'windows', 'linux', 'osx' and android",
+        help=(
+            "Platform to download for (default: all), will accept values like 'windows', 'linux', "
+            "'osx' and 'android'"
+        ),
     )
 
     parser.add_argument(
         "--human-folders",
-        type=bool,
-        default=False,
-        const=True,
-        nargs="?",
-        help="Download Folders are named based on the full text version of the title instead of the trimmed URL title",
+        action="store_true",
+        help=(
+            "Download Folders are named based on the full text version of the title instead of "
+            "the trimmed URL title"
+        ),
     )
 
     parser.add_argument(
@@ -44,7 +51,7 @@ def main():
     parser.add_argument(
         "--download-game",
         type=str,
-        help="Download a specific game, should be in the format publisher.itch.io/game",
+        help="Download a specific game, should be in the format 'https://publisher.itch.io/game'",
     )
 
     args = parser.parse_args()
