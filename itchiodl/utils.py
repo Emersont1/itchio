@@ -8,10 +8,10 @@ class NoDownloadError(Exception):
     """No download found exception"""
 
 
-def download(url, path, name, file):
+def download(url, pathname, name, filename):
     """Downloads a file from a url and saves it to a path, skips it if it already exists."""
 
-    desc = f"{name} - {file}"
+    desc = f"{name} - {filename}"
     print(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
@@ -21,20 +21,20 @@ def download(url, path, name, file):
     ):
         raise NoDownloadError("Http response is not a download, skipping")
 
-    cd = rsp.headers.get("Content-Disposition")
+    # cd = rsp.headers.get("Content-Disposition")
 
-    filename_re = re.search(r'filename="(.+)"', cd)
-    if filename_re is None:
-        filename = file
-    else:
-        filename = filename_re.group(1)
+    # filename_re = re.search(r'filename="(.+)"', cd)
+    # if filename_re is None:
+    #    filename = file
+    # else:
+    #    filename = filename_re.group(1)
 
-    with open(f"{path}/{filename}", "wb") as f:
+    with open(f"{pathname}/{filename}", "wb") as f:
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
     print(f"Downloaded {filename}")
-    return f"{path}/{filename}", True
+    return f"{pathname}/{filename}", True
 
 
 def clean_path(path):

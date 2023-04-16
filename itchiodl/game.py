@@ -2,8 +2,8 @@ import re
 import json
 import urllib
 import datetime
-from pathlib import Path
 from sys import argv
+from pathlib import Path
 import requests
 
 from itchiodl import utils
@@ -42,9 +42,10 @@ class Game:
         else:
             self.publisher_slug = matches.group(1)
 
+        # self.destination_path = Path(self.publisher_slug / self.game_slug)
         self.files = []
         self.downloads = []
-        self.dir = (
+        self.destination_path = (
             Path(".")
             / utils.clean_path(self.publisher_slug)
             / utils.clean_path(self.game_slug)
@@ -77,7 +78,7 @@ class Game:
 
         self.load_downloads(token)
 
-        self.dir.mkdir(parents=True, exist_ok=True)
+        self.destination_path.mkdir(parents=True, exist_ok=True)
 
         for d in self.downloads:
             if (
@@ -89,7 +90,7 @@ class Game:
                 continue
             self.do_download(d, token)
 
-        with self.dir.with_suffix(".json").open("w") as f:
+        with self.destination_path.with_suffix(".json").open(mode="w") as f:
             json.dump(
                 {
                     "name": self.name,
@@ -107,41 +108,39 @@ class Game:
         """Download a single file, checking for existing files"""
         print(f"Downloading {d['filename']}")
 
-        filename = d["filename"] or d["display_name"] or d["id"]
+        filename = utils.clean_path(d["filename"] or d["display_name"] or d["id"])
+        filepath = self.destination_path / filename
+        hashpath = filepath.with_suffix(".md5")
 
-        out_file = self.dir / filename
-
-        if out_file.exists():
+        if filepath.exists():
             print(f"File Already Exists! {filename}")
-            md5_file = out_file.with_suffix(".md5")
-            if md5_file.exists():
-                with md5_file.open("r") as f:
-                    md5 = f.read().strip()
+            if hashpath.exists():
+                with hashpath.open(mode="r") as hashfile:
+                    md5 = hashfile.read().strip()
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {filename}")
                         return
                     print(f"MD5 Mismatch! {filename}")
             else:
-                md5 = utils.md5sum(str(out_file))
+                md5 = utils.md5sum(filepath)
                 if md5 == d["md5_hash"]:
                     print(f"Skipping {self.name} - {filename}")
 
                     # Create checksum file
-                    with md5_file.open("w") as f:
-                        f.write(d["md5_hash"])
+                    with hashpath.open(mode="w") as hashfile:
+                        hashfile.write(d["md5_hash"])
                     return
                 # Old Download or corrupted file?
-                corrupted = False
-                if corrupted:
-                    out_file.remove()
-                    return
-
-            old_dir = self.dir / "old"
+                # corrupted = False
+                # if corrupted:
+                #     filename.remove()
+                #    return
+            old_dir = self.destination_path / "old"
             old_dir.mkdir(exist_ok=True)
 
             print(f"Moving {filename} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            out_file.rename(old_dir / f"{timestamp}-{filename}")
+            filepath.rename(old_dir / f"{timestamp}-{filename}")
 
         # Get UUID
         r = requests.post(
@@ -163,7 +162,7 @@ class Game:
             )
         # response_code = urllib.request.urlopen(url).getcode()
         try:
-            utils.download(url, self.dir, self.name, filename)
+            utils.download(url, self.destination_path, self.name, filename)
         except utils.NoDownloadError:
             print("Http response is not a download, skipping")
 
@@ -171,7 +170,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {out_file}
+                    Path: {self.destination_path}
                     File: {filename}
                     Request URL: {url}
                     This request failed due to a missing response header
@@ -187,7 +186,7 @@ class Game:
                 f.write(
                     f""" Cannot download game/asset: {self.game_slug}
                     Publisher Name: {self.publisher_slug}
-                    Path: {out_file}
+                    Path: {self.destination_path}
                     File: {filename}
                     Request URL: {url}
                     Request Response Code: {e.code}
@@ -199,10 +198,10 @@ class Game:
             return
 
         # Verify
-        if utils.md5sum(out_file) != d["md5_hash"]:
+        if utils.md5sum(filepath) != d["md5_hash"]:
             print(f"Failed to verify {filename}")
             return
 
         # Create checksum file
-        with out_file.with_suffix(".md5").open("w") as f:
-            f.write(d["md5_hash"])
+        with hashpath.open(mode="w") as hashfile:
+            hashfile.write(d["md5_hash"])
